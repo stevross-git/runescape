@@ -1,0 +1,1 @@
+Create a RuneScape-style spawn point sprite, top-down isometric view, 32x32 pixels. Golden glowing marker with star/cross symbol, bright aura. Player spawn location indicator, pixel art style, transparent background.

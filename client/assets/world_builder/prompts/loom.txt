@@ -1,0 +1,1 @@
+Create a RuneScape-style loom sprite, top-down isometric view, 48x32 pixels. Wooden weaving loom with fabric in progress, textile crafting station. Crafting skill object, pixel art style, transparent background.

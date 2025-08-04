@@ -1,0 +1,1 @@
+Create a RuneScape-style weapon shop building sprite, top-down isometric view, 76x60 pixels. Stone and wood construction, weapon displays in windows, anvil outside, crossed swords sign. Armorer shop, pixel art style, transparent background.

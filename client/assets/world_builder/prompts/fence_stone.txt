@@ -1,0 +1,1 @@
+Create a RuneScape-style stone fence sprite, top-down isometric view, 32x20 pixels. Gray stone wall with mortar, solid boundary fence. Defensive barrier, pixel art style, transparent background.

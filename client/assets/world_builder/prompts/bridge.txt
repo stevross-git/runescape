@@ -1,0 +1,1 @@
+Create a RuneScape-style wooden bridge sprite, top-down isometric view, 64x16 pixels. Wooden planks with support beams, crosses water/gaps. Medieval bridge section, pixel art style, transparent background.

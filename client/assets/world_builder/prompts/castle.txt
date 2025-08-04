@@ -1,0 +1,1 @@
+Create a RuneScape-style castle building sprite, top-down isometric view, 128x96 pixels. Gray stone walls, battlements, towers, large gate, flags. Medieval fortress architecture, pixel art style, transparent background.

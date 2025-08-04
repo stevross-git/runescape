@@ -1,0 +1,1 @@
+Create a RuneScape-style treasure chest sprite, top-down isometric view, 32x24 pixels. Wooden chest with iron bands, lock, closed lid. Treasure storage chest, pixel art style, transparent background.

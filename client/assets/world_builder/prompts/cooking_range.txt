@@ -1,0 +1,1 @@
+Create a RuneScape-style cooking range sprite, top-down isometric view, 40x32 pixels. Stone cooking stove with fire inside, pot on top, kitchen appliance. Cooking skill object, pixel art style, transparent background.

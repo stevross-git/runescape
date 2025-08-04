@@ -1,0 +1,1 @@
+Create a RuneScape-style spinning wheel sprite, top-down isometric view, 32x32 pixels. Wooden spinning wheel with spindle and fiber, crafting tool. Crafting skill object, pixel art style, transparent background.

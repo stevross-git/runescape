@@ -1,0 +1,1 @@
+Create a RuneScape-style furnace sprite, top-down isometric view, 48x40 pixels. Stone furnace with glowing fire inside, chimney, hot coals. Smelting furnace, pixel art style, transparent background.

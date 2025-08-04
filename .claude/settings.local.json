@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(npm install)",
+      "Bash(npm start)",
+      "Bash(taskkill:*)",
+      "Bash(node:*)",
+      "Bash(python:*)",
+      "Bash(pip install:*)",
+      "Bash(npm run dev:*)",
+      "Bash(dir:*)",
+      "Bash(move:*)",
+      "Bash(mv:*)"
+    ],
+    "deny": []
+  }
+}

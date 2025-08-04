@@ -1,0 +1,1 @@
+Create a RuneScape-style dead tree sprite, top-down isometric view, 40x48 pixels. Bare branches, gray/brown bark, lifeless appearance. Wilderness/haunted tree, pixel art style, transparent background.

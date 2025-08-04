@@ -1,0 +1,1 @@
+Create a RuneScape-style fishing spot sprite, top-down isometric view, 32x24 pixels. Rippling water with fish visible beneath surface, fishing spot indicator. Skill location marker, pixel art style, transparent background.

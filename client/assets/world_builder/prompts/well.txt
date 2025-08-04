@@ -1,0 +1,1 @@
+Create a RuneScape-style town well sprite, top-down isometric view, 32x24 pixels. Stone circular base, wooden roof, rope and bucket, dark water center. Medieval well, pixel art style, transparent background.

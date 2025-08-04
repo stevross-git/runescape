@@ -1,0 +1,1 @@
+Create a RuneScape-style lava tile, top-down view, 32x32 pixels. Bright orange-red molten lava with glowing effect and bubbling texture. Animated lava with bright highlights, pixel art style, seamless tileable.

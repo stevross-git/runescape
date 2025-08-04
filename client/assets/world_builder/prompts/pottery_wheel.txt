@@ -1,0 +1,1 @@
+Create a RuneScape-style pottery wheel sprite, top-down isometric view, 32x24 pixels. Clay pottery wheel with clay pot being shaped, crafting station. Crafting skill object, pixel art style, transparent background.

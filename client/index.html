@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RuneScape Clone</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="loadingScreen" class="screen active">
+            <h1>RuneScape Clone</h1>
+            <div class="loading-container">
+                <div class="loading-bar">
+                    <div id="loadingProgress" class="loading-fill"></div>
+                </div>
+                <div id="loadingText">Loading assets...</div>
+            </div>
+        </div>
+
+        <div id="loginScreen" class="screen">
+            <h1>RuneScape Clone</h1>
+            <div class="login-form">
+                <input type="text" id="usernameInput" placeholder="Username" maxlength="12">
+                <input type="password" id="passwordInput" placeholder="Password">
+                <button id="loginBtn">Login</button>
+                <button id="registerBtn">Register</button>
+            </div>
+        </div>
+        
+        <div id="gameScreen" class="screen">
+            <div id="gameInterface">
+                <canvas id="gameCanvas" width="800" height="600"></canvas>
+                
+                <div id="chatBox">
+                    <div id="chatMessages"></div>
+                    <input type="text" id="chatInput" placeholder="Type message...">
+                </div>
+                
+                <!-- Minimap -->
+                <div id="minimap">
+                    <div id="minimapHeader">
+                        <span>🗺️ Minimap</span>
+                        <div id="minimapControls">
+                            <button id="minimapZoomIn" title="Zoom In">+</button>
+                            <button id="minimapZoomOut" title="Zoom Out">-</button>
+                        </div>
+                    </div>
+                    <canvas id="minimapCanvas" width="150" height="150"></canvas>
+                    <div id="minimapOptions">
+                        <button id="worldMapBtn" title="World Map">🌍</button>
+                        <button id="homeBtn" title="Home Teleport">🏠</button>
+                    </div>
+                </div>
+                
+                <div id="playerStats">
+                    <div class="stat-bar">
+                        <span>HP: </span>
+                        <div class="bar-container">
+                            <div class="bar" id="hpBar"></div>
+                        </div>
+                        <span id="hpText">10/10</span>
+                    </div>
+                    <div class="stat-bar">
+                        <span>MP: </span>
+                        <div class="bar-container">
+                            <div class="bar" id="mpBar"></div>
+                        </div>
+                        <span id="mpText">10/10</span>
+                    </div>
+                    <div class="stat-bar">
+                        <span>Prayer: </span>
+                        <div class="bar-container">
+                            <div class="bar" id="prayerBar"></div>
+                        </div>
+                        <span id="prayerText">1/1</span>
+                    </div>
+                </div>
+                
+                <div id="equipment">
+                    <h3>Equipment</h3>
+                    <div id="equipmentSlots">
+                        <div class="equipment-slot" data-slot="weapon" title="Weapon">⚔️</div>
+                        <div class="equipment-slot" data-slot="helmet" title="Helmet">🪖</div>
+                        <div class="equipment-slot" data-slot="armor" title="Armor">🛡️</div>
+                        <div class="equipment-slot" data-slot="legs" title="Legs">👖</div>
+                        <div class="equipment-slot" data-slot="boots" title="Boots">👢</div>
+                        <div class="equipment-slot" data-slot="gloves" title="Gloves">🧤</div>
+                    </div>
+                </div>
+
+                <div id="inventory">
+                    <h3>Inventory</h3>
+                    <div id="inventoryGrid"></div>
+                </div>
+                
+                <div id="skills">
+                    <h3>Skills</h3>
+                    <div id="skillsList">
+                        <div class="skill">⚔️ Attack: <span id="attackLevel">1</span></div>
+                        <div class="skill">🛡️ Defense: <span id="defenseLevel">1</span></div>
+                        <div class="skill">💪 Strength: <span id="strengthLevel">1</span></div>
+                        <div class="skill">❤️ Hitpoints: <span id="hitpointsLevel">10</span></div>
+                        <div class="skill">🔮 Magic: <span id="magicLevel">1</span></div>
+                        <div class="skill">🏹 Ranged: <span id="rangedLevel">1</span></div>
+                        <div class="skill">🙏 Prayer: <span id="prayerLevel">1</span></div>
+                        <div class="skill">⛏️ Mining: <span id="miningLevel">1</span></div>
+                        <div class="skill">🪓 Woodcutting: <span id="woodcuttingLevel">1</span></div>
+                        <div class="skill">🎣 Fishing: <span id="fishingLevel">1</span></div>
+                        <div class="skill">🌱 Farming: <span id="farmingLevel">1</span></div>
+                        <div class="skill">🍳 Cooking: <span id="cookingLevel">1</span></div>
+                    </div>
+                </div>
+                
+                <div id="spellbook">
+                    <h3>Spellbook</h3>
+                    <div id="spellsList">
+                        <div class="spell" data-spell="wind strike" title="Wind Strike - 1 Air + 1 Mind rune">💨 Wind Strike</div>
+                        <div class="spell" data-spell="heal" title="Heal - 3 Air + 1 Water rune">💚 Heal</div>
+                        <div class="spell" data-spell="water strike" title="Water Strike - 1 Water + 1 Air + 1 Mind rune">💧 Water Strike</div>
+                        <div class="spell" data-spell="earth strike" title="Earth Strike - 2 Earth + 1 Air + 1 Mind rune">🌍 Earth Strike</div>
+                        <div class="spell" data-spell="fire strike" title="Fire Strike - 3 Fire + 2 Air + 1 Mind rune">🔥 Fire Strike</div>
+                    </div>
+                </div>
+                
+                <!-- Action Bar -->
+                <div id="actionBar">
+                    <div id="actionBarSlots">
+                        <div class="action-slot" data-slot="0" title="Action Slot 1 (Key: 1)">1</div>
+                        <div class="action-slot" data-slot="1" title="Action Slot 2 (Key: 2)">2</div>
+                        <div class="action-slot" data-slot="2" title="Action Slot 3 (Key: 3)">3</div>
+                        <div class="action-slot" data-slot="3" title="Action Slot 4 (Key: 4)">4</div>
+                        <div class="action-slot" data-slot="4" title="Action Slot 5 (Key: 5)">5</div>
+                        <div class="action-slot" data-slot="5" title="Action Slot 6 (Key: 6)">6</div>
+                        <div class="action-slot" data-slot="6" title="Action Slot 7 (Key: 7)">7</div>
+                        <div class="action-slot" data-slot="7" title="Action Slot 8 (Key: 8)">8</div>
+                        <div class="action-slot" data-slot="8" title="Action Slot 9 (Key: 9)">9</div>
+                        <div class="action-slot" data-slot="9" title="Action Slot 10 (Key: 0)">0</div>
+                    </div>
+                    <div id="actionBarControls">
+                        <button id="combatModeBtn" title="Toggle Combat Mode">⚔️</button>
+                        <button id="autoRetaliateBtn" title="Toggle Auto Retaliate" class="active">🛡️</button>
+                        <button id="runModeBtn" title="Toggle Run Mode">🏃</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Shop Interface -->
+        <div id="shopInterface" class="shop-overlay" style="display: none;">
+            <div class="shop-window">
+                <div class="shop-header">
+                    <h2 id="shopName">Shop</h2>
+                    <button id="closeShop">✕</button>
+                </div>
+                <div class="shop-content">
+                    <div class="shop-inventory">
+                        <h3>Shop Items</h3>
+                        <div id="shopGrid"></div>
+                    </div>
+                    <div class="player-inventory-shop">
+                        <h3>Your Inventory</h3>
+                        <div id="playerInventoryGrid"></div>
+                    </div>
+                </div>
+                <div class="shop-footer">
+                    <div id="playerCoins">Coins: 0</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bank Interface -->
+        <div id="bankInterface" class="bank-overlay" style="display: none;">
+            <div class="bank-window">
+                <div class="bank-header">
+                    <h2 id="bankTitle">Bank</h2>
+                    <button id="closeBank">✕</button>
+                </div>
+                <div class="bank-content">
+                    <div class="bank-storage">
+                        <h3>Bank Storage (100 slots)</h3>
+                        <div id="bankGrid"></div>
+                    </div>
+                    <div class="bank-inventory">
+                        <h3>Your Inventory</h3>
+                        <div id="bankInventoryGrid"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/imagemanager.js"></script>
+    <script src="js/sound.js"></script>
+    <script src="js/world.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/minimap.js"></script>
+    <script src="js/actionbar.js"></script>
+    <script src="js/interior.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

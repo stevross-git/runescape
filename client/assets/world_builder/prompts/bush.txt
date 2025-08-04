@@ -1,0 +1,1 @@
+Create a RuneScape-style bush sprite, top-down isometric view, 24x16 pixels. Small green shrub with dense foliage, rounded shape. Garden/forest undergrowth, pixel art style, transparent background.

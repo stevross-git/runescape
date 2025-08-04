@@ -1,0 +1,1 @@
+Create a RuneScape-style house building sprite, top-down isometric view, 64x48 pixels. Tan stone/timber walls, red tile roof, wooden door, small windows. Medieval cottage, pixel art style, transparent background.

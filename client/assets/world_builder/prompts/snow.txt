@@ -1,0 +1,1 @@
+Create a RuneScape-style snow tile, top-down view, 32x32 pixels. Pure white snow with subtle blue shadows, winter terrain texture. Cold climate ground, pixel art style, seamless tileable.

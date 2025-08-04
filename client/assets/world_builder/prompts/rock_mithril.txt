@@ -1,0 +1,1 @@
+Create a RuneScape-style mithril rock sprite, top-down isometric view, 40x32 pixels. Blue-tinted stone with visible mithril ore veins, sparkling metallic deposits. High-level mining rock, pixel art style, transparent background.

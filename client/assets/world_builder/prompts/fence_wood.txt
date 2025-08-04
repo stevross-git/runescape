@@ -1,0 +1,1 @@
+Create a RuneScape-style wooden fence sprite, top-down isometric view, 32x16 pixels. Brown wooden fence posts and rails, weathered wood texture. Property boundary, pixel art style, transparent background.

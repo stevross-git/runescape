@@ -1,0 +1,23 @@
+{
+  "name": "runescape-clone",
+  "version": "1.0.0",
+  "description": "A web-based RuneScape clone",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "nodemon server/index.js",
+    "build": "echo 'No build step required for basic setup'",
+    "test": "echo 'Tests not implemented yet'"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": ["game", "mmorpg", "runescape", "clone"],
+  "author": "",
+  "license": "MIT"
+}

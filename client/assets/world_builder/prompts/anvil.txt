@@ -1,0 +1,1 @@
+Create a RuneScape-style anvil sprite, top-down isometric view, 32x24 pixels. Black iron anvil with horn and face, heavy blacksmith tool. Smithing anvil, pixel art style, transparent background.

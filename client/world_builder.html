@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RuneScape World Builder</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #2d2d2d;
+            color: white;
+            overflow: hidden;
+        }
+        
+        .toolbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: #1a1a1a;
+            border-bottom: 2px solid #8B4513;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            z-index: 1000;
+        }
+        
+        .tool-group {
+            margin-right: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .tool-group label {
+            margin-right: 5px;
+            font-size: 12px;
+        }
+        
+        .tool-btn {
+            background: #8B4513;
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            margin: 0 2px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+        
+        .tool-btn:hover {
+            background: #A0522D;
+        }
+        
+        .tool-btn.active {
+            background: #FFD700;
+            color: black;
+        }
+        
+        .canvas-container {
+            position: fixed;
+            top: 60px;
+            left: 200px;
+            right: 250px;
+            bottom: 0;
+            background: #000;
+            overflow: hidden;
+        }
+        
+        #worldCanvas {
+            cursor: crosshair;
+        }
+        
+        .sidebar {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            width: 200px;
+            bottom: 0;
+            background: #1a1a1a;
+            border-right: 2px solid #8B4513;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        
+        .properties-panel {
+            position: fixed;
+            top: 60px;
+            right: 0;
+            width: 250px;
+            bottom: 0;
+            background: #1a1a1a;
+            border-left: 2px solid #8B4513;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        
+        .tile-category {
+            margin-bottom: 15px;
+        }
+        
+        .tile-category h3 {
+            color: #FFD700;
+            margin: 0 0 5px 0;
+            font-size: 14px;
+        }
+        
+        .tile-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 40px);
+            gap: 2px;
+        }
+        
+        .tile-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #666;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .tile-btn:hover {
+            border-color: #FFD700;
+        }
+        
+        .tile-btn.selected {
+            border: 2px solid #FFD700;
+            background: rgba(255, 215, 0, 0.2);
+        }
+        
+        .coords {
+            position: fixed;
+            bottom: 10px;
+            left: 210px;
+            background: rgba(0,0,0,0.8);
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        
+        .save-load {
+            position: fixed;
+            bottom: 10px;
+            right: 260px;
+        }
+        
+        .save-load button {
+            background: #228B22;
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            margin: 0 5px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        
+        .save-load button:hover {
+            background: #32CD32;
+        }
+        
+        .property-group {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #2d2d2d;
+            border-radius: 5px;
+        }
+        
+        .property-group h4 {
+            color: #FFD700;
+            margin: 0 0 10px 0;
+            font-size: 12px;
+        }
+        
+        .property-input {
+            width: 100%;
+            padding: 5px;
+            margin: 2px 0;
+            background: #444;
+            border: 1px solid #666;
+            color: white;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <div class="tool-group">
+            <button class="tool-btn active" data-tool="paint">Paint</button>
+            <button class="tool-btn" data-tool="erase">Erase</button>
+            <button class="tool-btn" data-tool="fill">Fill</button>
+            <button class="tool-btn" data-tool="select">Select</button>
+        </div>
+        
+        <div class="tool-group">
+            <label>Brush Size:</label>
+            <input type="range" id="brushSize" min="1" max="10" value="1" style="width: 80px;">
+            <span id="brushSizeDisplay">1</span>
+        </div>
+        
+        <div class="tool-group">
+            <button class="tool-btn" onclick="clearWorld()">Clear All</button>
+            <button class="tool-btn" onclick="generateTerrain()">Auto Terrain</button>
+        </div>
+        
+        <div class="tool-group">
+            <label>Grid:</label>
+            <input type="checkbox" id="showGrid" checked>
+        </div>
+    </div>
+    
+    <div class="sidebar">
+        <div class="tile-category">
+            <h3>🌍 Terrain</h3>
+            <div class="tile-grid">
+                <div class="tile-btn selected" data-type="grass" style="background: #228B22;">🌱</div>
+                <div class="tile-btn" data-type="dirt" style="background: #8B4513;">🟫</div>
+                <div class="tile-btn" data-type="stone" style="background: #696969;">⬜</div>
+                <div class="tile-btn" data-type="water" style="background: #4169E1;">🌊</div>
+                <div class="tile-btn" data-type="sand" style="background: #F4A460;">🟨</div>
+                <div class="tile-btn" data-type="mud" style="background: #654321;">🟤</div>
+                <div class="tile-btn" data-type="path" style="background: #A0A0A0;">🛤️</div>
+                <div class="tile-btn" data-type="lava" style="background: #FF4500;">🔥</div>
+            </div>
+        </div>
+        
+        <div class="tile-category">
+            <h3>🏗️ Buildings</h3>
+            <div class="tile-grid">
+                <div class="tile-btn" data-type="bank" style="background: #FFD700;">🏦</div>
+                <div class="tile-btn" data-type="shop" style="background: #8B4513;">🏪</div>
+                <div class="tile-btn" data-type="house" style="background: #D2B48C;">🏠</div>
+                <div class="tile-btn" data-type="castle" style="background: #696969;">🏰</div>
+                <div class="tile-btn" data-type="tower" style="background: #9932CC;">🗼</div>
+                <div class="tile-btn" data-type="well" style="background: #708090;">⚫</div>
+                <div class="tile-btn" data-type="fence" style="background: #8B4513;">🚧</div>
+                <div class="tile-btn" data-type="gate" style="background: #654321;">🚪</div>
+            </div>
+        </div>
+        
+        <div class="tile-category">
+            <h3>🌲 Nature</h3>
+            <div class="tile-grid">
+                <div class="tile-btn" data-type="tree_oak" style="background: #228B22;">🌳</div>
+                <div class="tile-btn" data-type="tree_pine" style="background: #2F4F4F;">🌲</div>
+                <div class="tile-btn" data-type="tree_willow" style="background: #90EE90;">🌿</div>
+                <div class="tile-btn" data-type="bush" style="background: #32CD32;">🌳</div>
+                <div class="tile-btn" data-type="flowers" style="background: #FF69B4;">🌸</div>
+                <div class="tile-btn" data-type="mushroom" style="background: #FF0000;">🍄</div>
+                <div class="tile-btn" data-type="crystal" style="background: #E6E6FA;">💎</div>
+                <div class="tile-btn" data-type="rock" style="background: #696969;">🪨</div>
+            </div>
+        </div>
+        
+        <div class="tile-category">
+            <h3>⚔️ Objects</h3>
+            <div class="tile-grid">
+                <div class="tile-btn" data-type="altar" style="background: #9932CC;">⛩️</div>
+                <div class="tile-btn" data-type="anvil" style="background: #2F2F2F;">⚒️</div>
+                <div class="tile-btn" data-type="furnace" style="background: #FF4500;">🔥</div>
+                <div class="tile-btn" data-type="chest" style="background: #8B4513;">📦</div>
+                <div class="tile-btn" data-type="statue" style="background: #D3D3D3;">🗿</div>
+                <div class="tile-btn" data-type="bridge" style="background: #8B4513;">🌉</div>
+                <div class="tile-btn" data-type="portal" style="background: #9932CC;">🌀</div>
+                <div class="tile-btn" data-type="spawn" style="background: #FFD700;">⭐</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="canvas-container">
+        <canvas id="worldCanvas" width="1600" height="1200"></canvas>
+    </div>
+    
+    <div class="properties-panel">
+        <div class="property-group">
+            <h4>Selected Tile</h4>
+            <div>Type: <span id="selectedType">grass</span></div>
+            <input type="text" class="property-input" id="tileName" placeholder="Custom name">
+        </div>
+        
+        <div class="property-group">
+            <h4>Position</h4>
+            <div>X: <span id="mouseX">0</span></div>
+            <div>Y: <span id="mouseY">0</span></div>
+            <div>Grid X: <span id="gridX">0</span></div>
+            <div>Grid Y: <span id="gridY">0</span></div>
+        </div>
+        
+        <div class="property-group">
+            <h4>World Settings</h4>
+            <label>World Width:</label>
+            <input type="number" class="property-input" id="worldWidth" value="100" min="50" max="500">
+            <label>World Height:</label>
+            <input type="number" class="property-input" id="worldHeight" value="75" min="50" max="500">
+            <label>Tile Size:</label>
+            <input type="number" class="property-input" id="tileSize" value="16" min="8" max="64">
+        </div>
+        
+        <div class="property-group">
+            <h4>Export Options</h4>
+            <button class="tool-btn" onclick="exportWorld()">Export JSON</button>
+            <button class="tool-btn" onclick="exportImages()">Export Images</button>
+            <button class="tool-btn" onclick="generateCode()">Generate Code</button>
+        </div>
+    </div>
+    
+    <div class="coords">
+        Position: <span id="coordsDisplay">0, 0</span>
+    </div>
+    
+    <div class="save-load">
+        <button onclick="saveWorld()">Save World</button>
+        <button onclick="loadWorld()">Load World</button>
+        <input type="file" id="fileInput" style="display: none;" accept=".json">
+    </div>
+    
+    <script src="js/world_builder.js"></script>
+</body>
+</html>

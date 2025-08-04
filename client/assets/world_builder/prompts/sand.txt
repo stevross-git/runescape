@@ -1,0 +1,1 @@
+Create a RuneScape-style sand tile, top-down view, 32x32 pixels. Light brown sandy texture with small granules visible. Desert/beach sand appearance, pixel art style, seamless tileable. Warm sandy brown color.

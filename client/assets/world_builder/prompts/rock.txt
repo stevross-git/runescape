@@ -1,0 +1,1 @@
+Create a RuneScape-style mining rock sprite, top-down isometric view, 32x24 pixels. Gray stone boulder with mining spots, ore veins visible. Mineable rock formation, pixel art style, transparent background.

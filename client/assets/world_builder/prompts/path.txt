@@ -1,0 +1,1 @@
+Create a RuneScape-style stone path tile, top-down view, 32x32 pixels. Light gray cobblestone path with worn stones and mortar. Medieval road texture, pixel art style, seamless tileable.
