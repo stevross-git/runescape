@@ -11,7 +11,9 @@
       "Bash(npm run dev:*)",
       "Bash(dir:*)",
       "Bash(move:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(copy:*)",
+      "Bash(cp:*)"
     ],
     "deny": []
   }

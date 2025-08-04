@@ -18,12 +18,21 @@ class RuneScapeWorldBuilder {
         this.isDragging = false;
         this.lastMousePos = { x: 0, y: 0 };
         
+        // Image cache for tile sprites
+        this.imageCache = {};
+        this.imagesLoaded = 0;
+        this.totalImages = 0;
+        
         // World data - 2D array of tiles
         this.worldData = [];
         this.initializeWorld();
         
+        // Define multi-tile building sizes (in tiles) - must be before setupEventListeners
+        this.buildingSizes = this.getBuildingSizes();
+        
         this.setupEventListeners();
-        this.render();
+        this.loadTileImages();
+        this.render(); // Initial render with emojis while images load
         
         // Generate RuneScape-specific assets
         this.generateRuneScapeAssets();
@@ -40,12 +49,50 @@ class RuneScapeWorldBuilder {
                     properties: {},
                     monsters: [],
                     spawns: [],
+                    npcs: [],
                     items: []
                 };
             }
         }
         this.tilesPlaced = 0;
         this.updateStatus();
+        console.log(`World initialized: ${this.worldWidth}x${this.worldHeight} tiles`);
+    }
+    
+    loadTileImages() {
+        // List of all tile types that have images
+        const tileTypes = [
+            'grass', 'dirt', 'stone', 'cobblestone', 'water', 'sand', 'mud', 'snow',
+            'bank', 'general_store', 'magic_shop', 'weapon_shop', 'armor_shop', 'food_shop', 'rune_shop', 'archery_shop',
+            'house_small', 'house_large', 'castle', 'tower_wizard', 'church', 'inn', 'windmill', 'lighthouse',
+            'tree_normal', 'tree_oak', 'tree_willow', 'tree_maple', 'tree_yew', 'tree_magic', 'tree_palm', 'tree_dead',
+            'rock_copper', 'rock_tin', 'rock_iron', 'rock_coal', 'rock_gold', 'rock_mithril', 'rock_adamant', 'rock_rune',
+            'fishing_spot', 'furnace', 'anvil', 'altar', 'spinning_wheel', 'pottery_wheel', 'loom', 'cooking_range',
+            'well', 'fence_wood', 'fence_stone', 'gate_wood', 'gate_metal', 'chest', 'statue', 'bridge'
+        ];
+        
+        this.totalImages = tileTypes.length;
+        
+        tileTypes.forEach(type => {
+            const img = new Image();
+            img.onload = () => {
+                this.imagesLoaded++;
+                console.log(`Loaded image: ${type} (${this.imagesLoaded}/${this.totalImages})`);
+                this.updateLoadingStatus();
+                if (this.imagesLoaded === this.totalImages) {
+                    console.log('All tile images loaded successfully! Re-rendering...');
+                    this.render(); // Re-render once all images are loaded
+                }
+            };
+            img.onerror = () => {
+                this.imagesLoaded++;
+                console.warn(`Failed to load image for tile type: ${type} at path: assets/world_builder/${type}.png`);
+                this.updateLoadingStatus();
+            };
+            img.src = `assets/world_builder/${type}.png`;
+            this.imageCache[type] = img;
+            console.log(`Loading image: ${type} from ${img.src}`);
+        });
     }
     
     setupEventListeners() {
@@ -176,14 +223,72 @@ class RuneScapeWorldBuilder {
         let tilesChanged = 0;
         
         if (this.currentTool === 'paint') {
-            for (let dx = -Math.floor(this.brushSize/2); dx <= Math.floor(this.brushSize/2); dx++) {
-                for (let dy = -Math.floor(this.brushSize/2); dy <= Math.floor(this.brushSize/2); dy++) {
-                    const x = worldX + dx;
-                    const y = worldY + dy;
-                    if (x >= 0 && x < this.worldWidth && y >= 0 && y < this.worldHeight) {
-                        if (this.worldData[y][x].type !== this.selectedType) {
-                            this.worldData[y][x].type = this.selectedType;
-                            tilesChanged++;
+            // Check if this is a multi-tile building
+            const buildingSize = this.buildingSizes && this.buildingSizes[this.selectedType];
+            
+            if (buildingSize && (buildingSize.width > 1.1 || buildingSize.height > 1.1)) {
+                // Place multi-tile building
+                const buildingWidth = Math.ceil(buildingSize.width);
+                const buildingHeight = Math.ceil(buildingSize.height);
+                
+                // Check if we have enough space and no existing buildings
+                let canPlace = true;
+                for (let dx = 0; dx < buildingWidth; dx++) {
+                    for (let dy = 0; dy < buildingHeight; dy++) {
+                        const x = worldX + dx;
+                        const y = worldY + dy;
+                        if (x >= this.worldWidth || y >= this.worldHeight) {
+                            canPlace = false;
+                            break;
+                        }
+                        // Check if there's already a building here
+                        if (this.worldData[y] && this.worldData[y][x] && 
+                            this.worldData[y][x].type !== 'grass' && 
+                            !['dirt', 'water', 'sand', 'mud', 'stone', 'cobblestone', 'snow', 'path', 'lava'].includes(this.worldData[y][x].type)) {
+                            canPlace = false;
+                            break;
+                        }
+                    }
+                    if (!canPlace) break;
+                }
+                
+                if (canPlace) {
+                    // Place the building (only set the main tile as the building type)
+                    if (this.worldData[worldY][worldX].type !== this.selectedType) {
+                        this.worldData[worldY][worldX].type = this.selectedType;
+                        tilesChanged++;
+                    }
+                    
+                    // Mark surrounding tiles as occupied to prevent overlapping buildings
+                    for (let dx = 0; dx < buildingWidth; dx++) {
+                        for (let dy = 0; dy < buildingHeight; dy++) {
+                            const x = worldX + dx;
+                            const y = worldY + dy;
+                            if (x < this.worldWidth && y < this.worldHeight) {
+                                if (dx === 0 && dy === 0) {
+                                    // Main tile gets the building type
+                                    continue;
+                                } else {
+                                    // Surrounding tiles get marked as occupied
+                                    this.worldData[y][x].properties = this.worldData[y][x].properties || {};
+                                    this.worldData[y][x].properties.occupiedBy = `${this.selectedType}_${worldX}_${worldY}`;
+                                    this.worldData[y][x].properties.buildingTile = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Regular single-tile or brush painting
+                for (let dx = -Math.floor(this.brushSize/2); dx <= Math.floor(this.brushSize/2); dx++) {
+                    for (let dy = -Math.floor(this.brushSize/2); dy <= Math.floor(this.brushSize/2); dy++) {
+                        const x = worldX + dx;
+                        const y = worldY + dy;
+                        if (x >= 0 && x < this.worldWidth && y >= 0 && y < this.worldHeight) {
+                            if (this.worldData[y][x].type !== this.selectedType) {
+                                this.worldData[y][x].type = this.selectedType;
+                                tilesChanged++;
+                            }
                         }
                     }
                 }
@@ -230,10 +335,7 @@ class RuneScapeWorldBuilder {
     
     render() {
         // Clear canvas with RuneScape-style background
-        const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
-        gradient.addColorStop(0, '#2F4F4F');
-        gradient.addColorStop(1, '#1a1a1a');
-        this.ctx.fillStyle = gradient;
+        this.ctx.fillStyle = '#228B22'; // Default grass green background
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         
         const startX = Math.floor(this.camera.x / this.tileSize);
@@ -245,6 +347,8 @@ class RuneScapeWorldBuilder {
         for (let y = Math.max(0, startY); y < endY; y++) {
             for (let x = Math.max(0, startX); x < endX; x++) {
                 const tile = this.worldData[y][x];
+                if (!tile) continue; // Skip if tile doesn't exist
+                
                 const screenX = x * this.tileSize - this.camera.x;
                 const screenY = y * this.tileSize - this.camera.y;
                 
@@ -252,17 +356,46 @@ class RuneScapeWorldBuilder {
                 const color = this.getTileColor(tile.type);
                 const symbol = this.getTileSymbol(tile.type);
                 
-                // Draw tile background
-                this.ctx.fillStyle = color;
-                this.ctx.fillRect(screenX, screenY, this.tileSize, this.tileSize);
+                // Determine if this tile type should have a background or be transparent
+                const terrainTypes = ['grass', 'dirt', 'stone', 'cobblestone', 'water', 'sand', 'mud', 'snow', 'path', 'lava'];
+                const shouldDrawBackground = terrainTypes.includes(tile.type);
                 
-                // Add subtle border for definition
+                // Get building size for this tile type
+                const buildingSize = this.buildingSizes && this.buildingSizes[tile.type];
+                const renderWidth = buildingSize ? buildingSize.width * this.tileSize : this.tileSize;
+                const renderHeight = buildingSize ? buildingSize.height * this.tileSize : this.tileSize;
+                
+                
+                // For terrain tiles, always draw background
+                if (shouldDrawBackground) {
+                    this.ctx.fillStyle = color;
+                    this.ctx.fillRect(screenX, screenY, this.tileSize, this.tileSize);
+                }
+                
+                // Try to draw actual image on top if available
+                const image = this.imageCache[tile.type];
+                if (image && image.complete && this.tileSize >= 8) {
+                    // Draw the actual PNG image at correct multi-tile size
+                    this.ctx.drawImage(image, screenX, screenY, renderWidth, renderHeight);
+                } else if (!shouldDrawBackground) {
+                    // For non-terrain tiles without image, draw colored background
+                    this.ctx.fillStyle = color;
+                    this.ctx.fillRect(screenX, screenY, this.tileSize, this.tileSize);
+                }
+                
+                // Add subtle border for definition (use appropriate size)
                 this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
                 this.ctx.lineWidth = 1;
-                this.ctx.strokeRect(screenX, screenY, this.tileSize, this.tileSize);
+                if (buildingSize && (image && image.complete)) {
+                    // For multi-tile buildings with images, draw border around full building
+                    this.ctx.strokeRect(screenX, screenY, renderWidth, renderHeight);
+                } else {
+                    // For single tiles or buildings without images, draw single tile border
+                    this.ctx.strokeRect(screenX, screenY, this.tileSize, this.tileSize);
+                }
                 
-                // Draw symbol for larger tiles
-                if (this.tileSize >= 12) {
+                // Draw symbol for larger tiles (if no image or as backup)
+                if (this.tileSize >= 12 && (!image || !image.complete)) {
                     this.ctx.fillStyle = this.getSymbolColor(tile.type);
                     this.ctx.font = `${Math.min(this.tileSize * 0.6, 20)}px Arial`;
                     this.ctx.textAlign = 'center';
@@ -414,7 +547,57 @@ class RuneScapeWorldBuilder {
             spawn_player: '#00BFFF',
             spawn_respawn: '#9932CC',
             spawn_teleport: '#40E0D0',
-            spawn_dungeon: '#2F4F4F'
+            spawn_dungeon: '#2F4F4F',
+            
+            // Shop NPCs
+            npc_banker: '#FFD700',
+            npc_shopkeeper: '#8B4513',
+            npc_weapon_trader: '#CD853F',
+            npc_armor_trader: '#A0A0A0',
+            npc_magic_trader: '#9932CC',
+            npc_food_trader: '#FFB6C1',
+            npc_rune_trader: '#4169E1',
+            npc_archery_trader: '#228B22',
+            
+            // Quest NPCs
+            npc_quest_giver: '#FFD700',
+            npc_quest_helper: '#32CD32',
+            npc_sage: '#9932CC',
+            npc_oracle: '#FF69B4',
+            npc_librarian: '#8B4513',
+            npc_researcher: '#4682B4',
+            npc_archaeologist: '#CD853F',
+            npc_explorer: '#228B22',
+            
+            // Skill NPCs
+            npc_combat_trainer: '#DC143C',
+            npc_magic_trainer: '#9932CC',
+            npc_smithing_trainer: '#2F2F2F',
+            npc_crafting_trainer: '#DEB887',
+            npc_mining_trainer: '#696969',
+            npc_fishing_trainer: '#4169E1',
+            npc_cooking_trainer: '#FF6347',
+            npc_prayer_trainer: '#FFD700',
+            
+            // Authority NPCs
+            npc_king: '#FFD700',
+            npc_duke: '#4169E1',
+            npc_guard_captain: '#C0C0C0',
+            npc_judge: '#8B4513',
+            npc_tax_collector: '#B8860B',
+            npc_herald: '#9932CC',
+            npc_diplomat: '#4682B4',
+            npc_mayor: '#228B22',
+            
+            // Civilian NPCs
+            npc_citizen: '#F5DEB3',
+            npc_farmer: '#228B22',
+            npc_fisherman: '#4169E1',
+            npc_miner: '#696969',
+            npc_blacksmith: '#2F2F2F',
+            npc_merchant: '#B8860B',
+            npc_bard: '#9932CC',
+            npc_child: '#FFB6C1'
         };
         return colors[type] || '#888888';
     }
@@ -539,7 +722,57 @@ class RuneScapeWorldBuilder {
             spawn_player: '🏠',
             spawn_respawn: '🔄',
             spawn_teleport: '🌀',
-            spawn_dungeon: '🕳️'
+            spawn_dungeon: '🕳️',
+            
+            // Shop NPCs
+            npc_banker: '🏦',
+            npc_shopkeeper: '🛒',
+            npc_weapon_trader: '⚔️',
+            npc_armor_trader: '🛡️',
+            npc_magic_trader: '🔮',
+            npc_food_trader: '🍞',
+            npc_rune_trader: '🔷',
+            npc_archery_trader: '🏹',
+            
+            // Quest NPCs
+            npc_quest_giver: '❗',
+            npc_quest_helper: '❓',
+            npc_sage: '🧙‍♂️',
+            npc_oracle: '🔮',
+            npc_librarian: '📚',
+            npc_researcher: '🔬',
+            npc_archaeologist: '🏺',
+            npc_explorer: '🗺️',
+            
+            // Skill NPCs
+            npc_combat_trainer: '⚔️',
+            npc_magic_trainer: '🧙',
+            npc_smithing_trainer: '⚒️',
+            npc_crafting_trainer: '🧵',
+            npc_mining_trainer: '⛏️',
+            npc_fishing_trainer: '🎣',
+            npc_cooking_trainer: '👨‍🍳',
+            npc_prayer_trainer: '🙏',
+            
+            // Authority NPCs
+            npc_king: '👑',
+            npc_duke: '🎩',
+            npc_guard_captain: '🛡️',
+            npc_judge: '⚖️',
+            npc_tax_collector: '💰',
+            npc_herald: '📢',
+            npc_diplomat: '📜',
+            npc_mayor: '🏛️',
+            
+            // Civilian NPCs
+            npc_citizen: '👤',
+            npc_farmer: '👨‍🌾',
+            npc_fisherman: '🎣',
+            npc_miner: '⛏️',
+            npc_blacksmith: '🔨',
+            npc_merchant: '💼',
+            npc_bard: '🎵',
+            npc_child: '👶'
         };
         return symbols[type] || '?';
     }
@@ -554,13 +787,27 @@ class RuneScapeWorldBuilder {
         document.getElementById('tilesPlaced').textContent = this.tilesPlaced;
     }
     
+    updateLoadingStatus() {
+        const statusBar = document.querySelector('.status-bar');
+        if (statusBar && this.totalImages > 0) {
+            const percentage = Math.round((this.imagesLoaded / this.totalImages) * 100);
+            if (this.imagesLoaded < this.totalImages) {
+                statusBar.innerHTML = `🏰 RuneScape World Builder | Loading Images ${percentage}% (${this.imagesLoaded}/${this.totalImages}) | Tiles Placed: <span id="tilesPlaced">${this.tilesPlaced}</span>`;
+            } else {
+                statusBar.innerHTML = `🏰 RuneScape World Builder | Ready | Tiles Placed: <span id="tilesPlaced">${this.tilesPlaced}</span>`;
+            }
+        }
+    }
+    
     updateConfigPanels() {
         const monsterConfig = document.getElementById('monsterConfig');
         const spawnConfig = document.getElementById('spawnConfig');
+        const npcConfig = document.getElementById('npcConfig');
         
         // Hide all config panels first
         monsterConfig.style.display = 'none';
         spawnConfig.style.display = 'none';
+        npcConfig.style.display = 'none';
         
         // Show relevant config panel based on selected type
         if (this.selectedType.startsWith('monster_')) {
@@ -569,6 +816,9 @@ class RuneScapeWorldBuilder {
         } else if (this.selectedType.startsWith('spawn_')) {
             spawnConfig.style.display = 'block';
             this.populateSpawnConfig();
+        } else if (this.selectedType.startsWith('npc_')) {
+            npcConfig.style.display = 'block';
+            this.populateNPCConfig();
         }
     }
     
@@ -637,6 +887,146 @@ class RuneScapeWorldBuilder {
         document.getElementById('spawnType').value = this.selectedType.replace('spawn_', '');
         document.getElementById('maxSpawned').value = defaults.maxSpawned;
         document.getElementById('spawnInterval').value = defaults.interval;
+    }
+    
+    populateNPCConfig() {
+        // Set default values based on NPC type
+        const npcDefaults = {
+            // Shop NPCs
+            npc_banker: { name: 'Bank Teller', type: 'shopkeeper', shop: 'bank', level: 0, dialogue: 'Welcome to the bank! How can I help you today?' },
+            npc_shopkeeper: { name: 'Shop Owner', type: 'shopkeeper', shop: 'general', level: 0, dialogue: 'Welcome to my shop! Take a look around.' },
+            npc_weapon_trader: { name: 'Weapon Trader', type: 'shopkeeper', shop: 'weapons', level: 5, dialogue: 'Fine weapons for sale! Perfect for any adventurer.' },
+            npc_armor_trader: { name: 'Armor Trader', type: 'shopkeeper', shop: 'armor', level: 5, dialogue: 'Quality armor to keep you safe in battle!' },
+            npc_magic_trader: { name: 'Magic Trader', type: 'shopkeeper', shop: 'magic', level: 10, dialogue: 'Magical items and mystical artifacts await!' },
+            npc_food_trader: { name: 'Food Trader', type: 'shopkeeper', shop: 'food', level: 0, dialogue: 'Fresh food and supplies for your journey!' },
+            npc_rune_trader: { name: 'Rune Trader', type: 'shopkeeper', shop: 'runes', level: 15, dialogue: 'Powerful runes for your magical needs.' },
+            npc_archery_trader: { name: 'Archery Trader', type: 'shopkeeper', shop: 'archery', level: 3, dialogue: 'Bows, arrows, and archery supplies!' },
+            
+            // Quest NPCs
+            npc_quest_giver: { name: 'Quest Giver', type: 'quest', shop: '', level: 20, dialogue: 'I have an important task for you, adventurer!' },
+            npc_quest_helper: { name: 'Quest Helper', type: 'quest', shop: '', level: 5, dialogue: 'Need help with your quest? I might have some advice.' },
+            npc_sage: { name: 'Wise Sage', type: 'quest', shop: '', level: 50, dialogue: 'Seek knowledge, young one, and you shall find wisdom.' },
+            npc_oracle: { name: 'Oracle', type: 'quest', shop: '', level: 80, dialogue: 'The fates whisper of great things in your future...' },
+            npc_librarian: { name: 'Librarian', type: 'quest', shop: '', level: 10, dialogue: 'Knowledge is power. What would you like to learn?' },
+            npc_researcher: { name: 'Researcher', type: 'quest', shop: '', level: 25, dialogue: 'My research has uncovered some interesting findings...' },
+            npc_archaeologist: { name: 'Archaeologist', type: 'quest', shop: '', level: 30, dialogue: 'Ancient artifacts hold many secrets!' },
+            npc_explorer: { name: 'Explorer', type: 'quest', shop: '', level: 15, dialogue: 'I\'ve seen many lands in my travels. Want to hear some stories?' },
+            
+            // Skill NPCs
+            npc_combat_trainer: { name: 'Combat Trainer', type: 'trainer', skill: 'attack', level: 40, dialogue: 'Train hard and become a mighty warrior!' },
+            npc_magic_trainer: { name: 'Magic Trainer', type: 'trainer', skill: 'magic', level: 50, dialogue: 'Magic flows through all things. Let me teach you.' },
+            npc_smithing_trainer: { name: 'Smithing Trainer', type: 'trainer', skill: 'smithing', level: 35, dialogue: 'The forge awaits! Learn to craft mighty weapons and armor.' },
+            npc_crafting_trainer: { name: 'Crafting Trainer', type: 'trainer', skill: 'crafting', level: 30, dialogue: 'Crafting is an art. Let me show you the techniques.' },
+            npc_mining_trainer: { name: 'Mining Trainer', type: 'trainer', skill: 'mining', level: 25, dialogue: 'The earth holds many treasures. Learn to find them!' },
+            npc_fishing_trainer: { name: 'Fishing Trainer', type: 'trainer', skill: 'fishing', level: 20, dialogue: 'Patience and skill - that\'s what fishing is about.' },
+            npc_cooking_trainer: { name: 'Cooking Trainer', type: 'trainer', skill: 'cooking', level: 15, dialogue: 'Good food restores the body and soul!' },
+            npc_prayer_trainer: { name: 'Prayer Trainer', type: 'trainer', skill: 'prayer', level: 60, dialogue: 'Through prayer, find strength and protection.' },
+            
+            // Authority NPCs
+            npc_king: { name: 'King', type: 'authority', shop: '', level: 200, dialogue: 'Welcome to my kingdom, noble adventurer.' },
+            npc_duke: { name: 'Duke', type: 'authority', shop: '', level: 100, dialogue: 'I oversee this region in the name of the crown.' },
+            npc_guard_captain: { name: 'Guard Captain', type: 'authority', shop: '', level: 75, dialogue: 'Keep the peace, citizen. The law is absolute here.' },
+            npc_judge: { name: 'Judge', type: 'authority', shop: '', level: 50, dialogue: 'Justice must be served fairly and without bias.' },
+            npc_tax_collector: { name: 'Tax Collector', type: 'authority', shop: '', level: 25, dialogue: 'Time to pay your taxes! The kingdom needs funding.' },
+            npc_herald: { name: 'Herald', type: 'authority', shop: '', level: 15, dialogue: 'Hear ye! I bring news from across the realm!' },
+            npc_diplomat: { name: 'Diplomat', type: 'authority', shop: '', level: 30, dialogue: 'Diplomacy solves more problems than warfare.' },
+            npc_mayor: { name: 'Mayor', type: 'authority', shop: '', level: 40, dialogue: 'Welcome to our town! I hope you enjoy your stay.' },
+            
+            // Civilian NPCs
+            npc_citizen: { name: 'Citizen', type: 'civilian', shop: '', level: 3, dialogue: 'Good day to you, traveler!' },
+            npc_farmer: { name: 'Farmer', type: 'civilian', shop: '', level: 5, dialogue: 'The crops are growing well this season.' },
+            npc_fisherman: { name: 'Fisherman', type: 'civilian', shop: '', level: 8, dialogue: 'The fish are biting well today!' },
+            npc_miner: { name: 'Miner', type: 'civilian', shop: '', level: 12, dialogue: 'Found some good ore in the mines recently.' },
+            npc_blacksmith: { name: 'Blacksmith', type: 'civilian', shop: '', level: 20, dialogue: 'Need something forged? I\'m your man!' },
+            npc_merchant: { name: 'Merchant', type: 'civilian', shop: '', level: 10, dialogue: 'I travel far and wide selling my wares.' },
+            npc_bard: { name: 'Bard', type: 'civilian', shop: '', level: 7, dialogue: 'Would you like to hear a tale or song?' },
+            npc_child: { name: 'Child', type: 'civilian', shop: '', level: 1, dialogue: 'Hi there! Want to play?' }
+        };
+        
+        const defaults = npcDefaults[this.selectedType] || { 
+            name: 'NPC', 
+            type: 'civilian', 
+            shop: '', 
+            skill: '', 
+            level: 1, 
+            dialogue: 'Hello there!' 
+        };
+        
+        // Populate form fields
+        document.getElementById('npcName').value = defaults.name;
+        document.getElementById('npcType').value = defaults.type;
+        document.getElementById('shopType').value = defaults.shop || '';
+        document.getElementById('skillTaught').value = defaults.skill || '';
+        document.getElementById('npcCombatLevel').value = defaults.level;
+        document.getElementById('npcCanAttack').checked = defaults.level > 20;
+        document.getElementById('npcRoaming').checked = ['civilian', 'authority'].includes(defaults.type);
+        document.getElementById('npcHasQuest').checked = defaults.type === 'quest';
+        document.getElementById('npcDialogue').value = defaults.dialogue;
+    }
+    
+    getBuildingSizes() {
+        // Define how many tiles each building should occupy (width, height)
+        // Based on the original asset dimensions: 32px = 1 tile
+        return {
+            // Large Buildings (4x3 tiles)
+            'castle': { width: 4, height: 3 },
+            
+            // Medium Buildings (3x2.5 tiles)
+            'bank': { width: 3, height: 2.5 },
+            'general_store': { width: 2.5, height: 2 },
+            'magic_shop': { width: 2.25, height: 2 },
+            'weapon_shop': { width: 2.4, height: 1.9 },
+            'armor_shop': { width: 2.4, height: 1.9 },
+            'food_shop': { width: 2, height: 1.5 },
+            'rune_shop': { width: 2.1, height: 1.75 },
+            'archery_shop': { width: 2.2, height: 1.6 },
+            'church': { width: 3, height: 2.5 },
+            'inn': { width: 2.75, height: 2 },
+            
+            // Small Buildings (2x1.5 tiles)
+            'house_small': { width: 1.5, height: 1.1 },
+            'house_large': { width: 2.5, height: 1.9 },
+            
+            // Tall Buildings (1.5x2.5 tiles)
+            'tower_wizard': { width: 1.5, height: 2.5 },
+            'lighthouse': { width: 1.25, height: 3 },
+            'windmill': { width: 2, height: 2.5 },
+            
+            // Small Objects (1x0.75 tiles)
+            'well': { width: 1, height: 0.75 },
+            'chest': { width: 1, height: 0.75 },
+            'statue': { width: 1, height: 1.5 },
+            'anvil': { width: 1, height: 0.75 },
+            'furnace': { width: 1.5, height: 1.25 },
+            'altar': { width: 1.5, height: 1 },
+            
+            // Linear Objects
+            'fence_wood': { width: 1, height: 0.5 },
+            'fence_stone': { width: 1, height: 0.6 },
+            'gate_wood': { width: 1.25, height: 0.75 },
+            'gate_metal': { width: 1.25, height: 0.9 },
+            'bridge': { width: 2, height: 0.5 },
+            
+            // Trees (varied sizes)
+            'tree_normal': { width: 1.25, height: 1.25 },
+            'tree_oak': { width: 1.5, height: 1.5 },
+            'tree_willow': { width: 1.5, height: 1.5 },
+            'tree_maple': { width: 1.5, height: 1.5 },
+            'tree_yew': { width: 1.75, height: 1.75 },
+            'tree_magic': { width: 2, height: 2 },
+            'tree_palm': { width: 1.5, height: 2 },
+            'tree_dead': { width: 1.25, height: 1.5 },
+            
+            // Mining Rocks
+            'rock_copper': { width: 1, height: 0.75 },
+            'rock_tin': { width: 1, height: 0.75 },
+            'rock_iron': { width: 1, height: 0.75 },
+            'rock_coal': { width: 1, height: 0.75 },
+            'rock_gold': { width: 1, height: 0.75 },
+            'rock_mithril': { width: 1.25, height: 1 },
+            'rock_adamant': { width: 1.4, height: 1.1 },
+            'rock_rune': { width: 1.5, height: 1.25 }
+        };
     }
     
     generateRuneScapeAssets() {
@@ -1034,8 +1424,13 @@ document.getElementById('worldCanvas').addEventListener('contextmenu', (e) => {
 // Initialize enhanced world builder
 let worldBuilder;
 window.addEventListener('load', () => {
-    worldBuilder = new RuneScapeWorldBuilder();
-    console.log('🏰 RuneScape World Builder initialized!');
+    console.log('🏰 Initializing RuneScape World Builder...');
+    try {
+        worldBuilder = new RuneScapeWorldBuilder();
+        console.log('🏰 RuneScape World Builder initialized successfully!', worldBuilder);
+    } catch (error) {
+        console.error('Failed to initialize world builder:', error);
+    }
 });
 
 // Monster and Spawn Configuration Functions
@@ -1066,6 +1461,48 @@ function applySpawnConfig() {
     
     console.log('Applied spawn configuration:', config);
     alert(`Spawn Point Configuration Applied!\n\nType: ${config.type}\nMonster: ${config.monster.replace('monster_', '').replace('_', ' ')}\nMax Spawned: ${config.maxSpawned}\nInterval: ${config.spawnInterval}s\nArea: ${config.areaSize}x${config.areaSize}`);
+}
+
+function applyNPCConfig() {
+    const config = {
+        name: document.getElementById('npcName').value || 'Unnamed NPC',
+        type: document.getElementById('npcType').value,
+        shopType: document.getElementById('shopType').value,
+        skillTaught: document.getElementById('skillTaught').value,
+        combatLevel: parseInt(document.getElementById('npcCombatLevel').value),
+        canAttack: document.getElementById('npcCanAttack').checked,
+        roaming: document.getElementById('npcRoaming').checked,
+        hasQuest: document.getElementById('npcHasQuest').checked,
+        dialogue: document.getElementById('npcDialogue').value || 'Hello there!'
+    };
+    
+    console.log('Applied NPC configuration:', config);
+    
+    // Generate description based on NPC type and settings
+    let description = `Name: ${config.name}\nType: ${config.type.charAt(0).toUpperCase() + config.type.slice(1)}`;
+    
+    if (config.shopType) {
+        description += `\nShop: ${config.shopType.charAt(0).toUpperCase() + config.shopType.slice(1)}`;
+    }
+    
+    if (config.skillTaught) {
+        description += `\nTeaches: ${config.skillTaught.charAt(0).toUpperCase() + config.skillTaught.slice(1)}`;
+    }
+    
+    if (config.combatLevel > 0) {
+        description += `\nCombat Level: ${config.combatLevel}`;
+    }
+    
+    description += `\nCan Attack: ${config.canAttack ? 'Yes' : 'No'}`;
+    description += `\nCan Roam: ${config.roaming ? 'Yes' : 'No'}`;
+    
+    if (config.hasQuest) {
+        description += `\nHas Quest: Yes`;
+    }
+    
+    description += `\n\nDialogue: "${config.dialogue}"`;
+    
+    alert(`NPC Configuration Applied!\n\n${description}`);
 }
 
 // Add event listeners for range sliders
