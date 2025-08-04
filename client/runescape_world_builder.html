@@ -294,6 +294,8 @@
             <button class="tool-btn" onclick="generateVarrock()">🏰 Varrock</button>
             <button class="tool-btn" onclick="generateFalador()">⚔️ Falador</button>
             <button class="tool-btn" onclick="populateMonsters()">👹 Add Monsters</button>
+            <button class="tool-btn" onclick="worldBuilder.exportWorldWithEntryPoints()">🚪 Export with Doors</button>
+            <button class="tool-btn" onclick="worldBuilder.toggleTestMode()" id="testModeBtn">🎮 Test Mode</button>
         </div>
         
         <div class="tool-group">
@@ -727,7 +729,7 @@
     </div>
     
     <div class="status-bar">
-        🏰 RuneScape World Builder | Ready | Tiles Placed: <span id="tilesPlaced">0</span>
+        🏰 RuneScape World Builder | <span id="testModeIndicator" style="color: #FFD700;">BUILD MODE</span> | Tiles Placed: <span id="tilesPlaced">0</span>
     </div>
     
     <script src="js/runescape_world_builder.js"></script>
