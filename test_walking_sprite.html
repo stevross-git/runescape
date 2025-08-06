@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Walking Sprite Test</title>
+    <style>
+        body {
+            margin: 20px;
+            background: #333;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            border: 2px solid #666;
+            background: #222;
+            display: block;
+            margin: 20px 0;
+        }
+        .controls {
+            margin: 10px 0;
+        }
+        button {
+            margin: 0 5px;
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Walking Sprite Sheet Test</h1>
+    <p>Testing: client/assets/player/male_walking.png</p>
+    
+    <canvas id="testCanvas" width="800" height="600"></canvas>
+    
+    <div class="controls">
+        <button onclick="changeDirection('down')">Down</button>
+        <button onclick="changeDirection('left')">Left</button>
+        <button onclick="changeDirection('right')">Right</button>
+        <button onclick="toggleAnimation()">Toggle Animation</button>
+    </div>
+    
+    <div id="info"></div>
+
+    <script>
+        const canvas = document.getElementById('testCanvas');
+        const ctx = canvas.getContext('2d');
+        const info = document.getElementById('info');
+        
+        let spriteSheet = new Image();
+        let animationFrame = 0;
+        let direction = 'down';
+        let animating = true;
+        let lastTime = 0;
+        
+        // Sprite sheet parameters
+        const SPRITE_COLS = 4;
+        const SPRITE_ROWS = 3;
+        let frameWidth = 128;
+        let frameHeight = 128;
+        
+        spriteSheet.onload = function() {
+            // Calculate actual frame dimensions
+            frameWidth = spriteSheet.width / SPRITE_COLS;
+            frameHeight = spriteSheet.height / SPRITE_ROWS;
+            
+            info.innerHTML = `
+                Sprite Sheet Loaded!<br>
+                Image size: ${spriteSheet.width}x${spriteSheet.height}<br>
+                Frame size: ${frameWidth}x${frameHeight}<br>
+                Grid: ${SPRITE_COLS}x${SPRITE_ROWS}
+            `;
+            
+            // Start animation
+            requestAnimationFrame(animate);
+        };
+        
+        spriteSheet.onerror = function() {
+            info.innerHTML = 'ERROR: Failed to load sprite sheet!';
+        };
+        
+        spriteSheet.src = 'client/assets/player/male_walking.png';
+        
+        function getDirectionRow(dir) {
+            switch(dir) {
+                case 'down': return 0;
+                case 'left': return 1;
+                case 'right': return 2;
+                default: return 0;
+            }
+        }
+        
+        function animate(currentTime) {
+            const deltaTime = currentTime - lastTime;
+            
+            // Clear canvas
+            ctx.fillStyle = '#222';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            if (spriteSheet.complete && spriteSheet.width > 0) {
+                // Draw the entire sprite sheet (scaled down)
+                ctx.save();
+                ctx.globalAlpha = 0.3;
+                ctx.drawImage(spriteSheet, 10, 10, spriteSheet.width * 0.5, spriteSheet.height * 0.5);
+                ctx.restore();
+                
+                // Draw grid lines
+                ctx.strokeStyle = 'yellow';
+                ctx.lineWidth = 1;
+                for (let i = 0; i <= SPRITE_COLS; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(10 + i * frameWidth * 0.5, 10);
+                    ctx.lineTo(10 + i * frameWidth * 0.5, 10 + spriteSheet.height * 0.5);
+                    ctx.stroke();
+                }
+                for (let i = 0; i <= SPRITE_ROWS; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(10, 10 + i * frameHeight * 0.5);
+                    ctx.lineTo(10 + spriteSheet.width * 0.5, 10 + i * frameHeight * 0.5);
+                    ctx.stroke();
+                }
+                
+                // Calculate sprite position
+                const row = getDirectionRow(direction);
+                const frameX = animationFrame * frameWidth;
+                const frameY = row * frameHeight;
+                
+                // Draw current frame (large)
+                ctx.save();
+                ctx.fillStyle = 'white';
+                ctx.fillText(`Frame ${animationFrame}, Direction: ${direction}, Pos: (${frameX}, ${frameY})`, 400, 30);
+                
+                // Draw frame at actual size
+                ctx.strokeStyle = 'green';
+                ctx.strokeRect(400, 50, frameWidth, frameHeight);
+                ctx.drawImage(
+                    spriteSheet,
+                    frameX, frameY, frameWidth, frameHeight,
+                    400, 50, frameWidth, frameHeight
+                );
+                
+                // Draw frame scaled to game size
+                ctx.strokeStyle = 'blue';
+                ctx.strokeRect(400, 250, 48, 48);
+                ctx.drawImage(
+                    spriteSheet,
+                    frameX, frameY, frameWidth, frameHeight,
+                    400, 250, 48, 48
+                );
+                ctx.restore();
+                
+                // Update animation
+                if (animating && deltaTime > 200) {
+                    animationFrame = (animationFrame + 1) % SPRITE_COLS;
+                    lastTime = currentTime;
+                }
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        function changeDirection(dir) {
+            direction = dir;
+            animationFrame = 0;
+        }
+        
+        function toggleAnimation() {
+            animating = !animating;
+        }
+    </script>
+</body>
+</html>
