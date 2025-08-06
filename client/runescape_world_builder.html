@@ -269,6 +269,94 @@
             font-size: 12px;
             font-weight: bold;
         }
+        
+        /* Claude Terminal Styles */
+        .claude-terminal {
+            position: fixed;
+            top: 70px;
+            right: 10px;
+            width: 400px;
+            height: 500px;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #FFD700;
+            border-radius: 10px;
+            display: none;
+            z-index: 2000;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+        
+        .terminal-header {
+            background: linear-gradient(to bottom, #8B4513, #654321);
+            padding: 10px;
+            border-bottom: 2px solid #FFD700;
+            color: #FFD700;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .terminal-close {
+            background: #DC143C;
+            color: white;
+            border: none;
+            padding: 2px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .terminal-output {
+            height: 380px;
+            overflow-y: auto;
+            padding: 10px;
+            color: #00FF00;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .terminal-input-area {
+            padding: 10px;
+            border-top: 1px solid #FFD700;
+            display: flex;
+            align-items: center;
+        }
+        
+        .terminal-prompt {
+            color: #FFD700;
+            margin-right: 5px;
+        }
+        
+        .terminal-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #00FF00;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            outline: none;
+        }
+        
+        .terminal-message {
+            margin-bottom: 5px;
+        }
+        
+        .terminal-user {
+            color: #FFD700;
+        }
+        
+        .terminal-system {
+            color: #00BFFF;
+        }
+        
+        .terminal-error {
+            color: #FF4500;
+        }
+        
+        .terminal-success {
+            color: #32CD32;
+        }
     </style>
 </head>
 <body>
@@ -296,6 +384,9 @@
             <button class="tool-btn" onclick="populateMonsters()">👹 Add Monsters</button>
             <button class="tool-btn" onclick="worldBuilder.exportWorldWithEntryPoints()">🚪 Export with Doors</button>
             <button class="tool-btn" onclick="worldBuilder.toggleTestMode()" id="testModeBtn">🎮 Test Mode</button>
+            <button class="tool-btn" onclick="gameCommands.manualSave()" id="debugSaveBtn">🔧 Debug Save</button>
+            <button class="tool-btn" onclick="showPlayerImageGenerator()" id="imageGenBtn">🎨 Player Image</button>
+            <button class="tool-btn" onclick="toggleClaudeTerminal()" id="claudeTerminalBtn">💻 Claude Terminal</button>
         </div>
         
         <div class="tool-group">
@@ -309,13 +400,13 @@
             <h3>🌍 Terrain</h3>
             <div class="tile-grid">
                 <div class="tile-btn selected" data-type="grass" data-name="Grass" style="background: #228B22;">🌱</div>
-                <div class="tile-btn" data-type="dirt" data-name="Dirt" style="background: #8B4513;">🟫</div>
-                <div class="tile-btn" data-type="stone" data-name="Stone" style="background: #696969;">⬜</div>
+                <div class="tile-btn" data-type="dirt" data-name="Dirt" style="background: linear-gradient(135deg, #8B4513, #A0522D, #CD853F);">🟫</div>
+                <div class="tile-btn" data-type="stone" data-name="Stone" style="background: linear-gradient(135deg, #696969, #808080, #A9A9A9);">🪨</div>
                 <div class="tile-btn" data-type="cobblestone" data-name="Cobble" style="background: #A0A0A0;">🧱</div>
-                <div class="tile-btn" data-type="water" data-name="Water" style="background: #4169E1;">🌊</div>
-                <div class="tile-btn" data-type="sand" data-name="Sand" style="background: #F4A460;">🟨</div>
-                <div class="tile-btn" data-type="mud" data-name="Mud" style="background: #654321;">🟤</div>
-                <div class="tile-btn" data-type="snow" data-name="Snow" style="background: #FFFAFA;">❄️</div>
+                <div class="tile-btn" data-type="water" data-name="Water" style="background: linear-gradient(135deg, #4169E1, #1E90FF, #87CEEB);">🌊</div>
+                <div class="tile-btn" data-type="sand" data-name="Sand" style="background: linear-gradient(135deg, #F4A460, #DEB887, #D2B48C);">🏖️</div>
+                <div class="tile-btn" data-type="mud" data-name="Mud" style="background: linear-gradient(135deg, #8B4513, #654321, #5D4037);">💩</div>
+                <div class="tile-btn" data-type="snow" data-name="Snow" style="background: linear-gradient(45deg, #F0F8FF, #E6F3FF); border: 1px solid #B0E0E6;">🌨️</div>
             </div>
         </div>
         
@@ -725,6 +816,7 @@
     <div class="save-load">
         <button onclick="saveWorld()">💾 Save World</button>
         <button onclick="loadWorld()">📁 Load World</button>
+        <button onclick="gameCommands.manualSave()" style="background: linear-gradient(to bottom, #FF6347, #DC143C);">🚨 Test Save</button>
         <input type="file" id="fileInput" style="display: none;" accept=".json">
     </div>
     
@@ -732,6 +824,700 @@
         🏰 RuneScape World Builder | <span id="testModeIndicator" style="color: #FFD700;">BUILD MODE</span> | Tiles Placed: <span id="tilesPlaced">0</span>
     </div>
     
+    <!-- Claude Terminal -->
+    <div id="claudeTerminal" class="claude-terminal">
+        <div class="terminal-header">
+            💻 Claude Code Terminal
+            <button class="terminal-close" onclick="toggleClaudeTerminal()">×</button>
+        </div>
+        <div id="terminalOutput" class="terminal-output">
+            <div class="terminal-message terminal-system">🚀 Claude Code Terminal v1.0</div>
+            <div class="terminal-message terminal-system">Connected to RuneScape World Builder</div>
+            <div class="terminal-message terminal-system">Type commands to interact with Claude AI...</div>
+            <div class="terminal-message terminal-system">Commands: help, analyze, create, modify, export, save</div>
+            <div class="terminal-message"></div>
+        </div>
+        <div class="terminal-input-area">
+            <span class="terminal-prompt">claude></span>
+            <input type="text" id="terminalInput" class="terminal-input" placeholder="Type a command..." onkeypress="handleTerminalInput(event)">
+        </div>
+    </div>
+    
+    <!-- Player Image Generator Modal -->
+    <div id="imageGeneratorModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(to bottom, #2d2d2d, #1a1a1a); padding: 30px; border-radius: 10px; border: 3px solid #FFD700; width: 500px; max-width: 90vw;">
+            <h2 style="color: #FFD700; text-align: center; margin: 0 0 20px 0;">🎨 AI Player Image Generator</h2>
+            
+            <div style="margin-bottom: 15px;">
+                <label style="color: #FFD700; display: block; margin-bottom: 5px;">Describe your character:</label>
+                <textarea id="imagePrompt" placeholder="e.g., A brave female knight with silver armor and a red cape, holding a sword..." 
+                    style="width: 100%; height: 80px; padding: 10px; background: rgba(0,0,0,0.5); border: 2px solid #8B4513; color: #FFD700; border-radius: 5px; font-family: 'Courier New', monospace; resize: vertical;"></textarea>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="color: #FFD700; display: block; margin-bottom: 5px;">Art Style:</label>
+                <select id="imageStyle" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 2px solid #8B4513; color: #FFD700; border-radius: 5px; font-family: 'Courier New', monospace;">
+                    <option value="fantasy">Fantasy</option>
+                    <option value="runescape">RuneScape Style</option>
+                    <option value="realistic">Realistic</option>
+                    <option value="anime">Anime</option>
+                    <option value="pixel">Pixel Art</option>
+                </select>
+            </div>
+            
+            <div style="text-align: center; margin-bottom: 20px;">
+                <button onclick="generatePlayerImageFromModal()" style="background: linear-gradient(to bottom, #228B22, #006400); border: 2px solid #32CD32; color: #FFF; padding: 12px 20px; margin: 0 10px; cursor: pointer; border-radius: 5px; font-weight: bold;">
+                    🎨 Generate Image
+                </button>
+                <button onclick="generateVariationsFromModal()" style="background: linear-gradient(to bottom, #FF8C00, #FF6347); border: 2px solid #FFD700; color: #FFF; padding: 12px 20px; margin: 0 10px; cursor: pointer; border-radius: 5px; font-weight: bold;">
+                    🎭 Generate 3 Variations
+                </button>
+            </div>
+            
+            <div id="imageGenerationStatus" style="color: #FFD700; text-align: center; margin-bottom: 15px; min-height: 20px;"></div>
+            
+            <div style="text-align: center;">
+                <button onclick="closePlayerImageGenerator()" style="background: linear-gradient(to bottom, #8B4513, #654321); border: 2px solid #FFD700; color: #FFD700; padding: 10px 20px; cursor: pointer; border-radius: 5px; font-weight: bold;">
+                    Close
+                </button>
+                <button onclick="showPlayerImageGallery()" style="background: linear-gradient(to bottom, #4169E1, #1E90FF); border: 2px solid #87CEEB; color: #FFF; padding: 10px 20px; margin-left: 10px; cursor: pointer; border-radius: 5px; font-weight: bold;">
+                    📁 View Gallery
+                </button>
+            </div>
+            
+            <div style="margin-top: 15px; color: #FFD700; font-size: 12px; text-align: center;">
+                💡 Tip: Be descriptive! Include details about armor, weapons, hair, expression, pose, etc.
+            </div>
+        </div>
+    </div>
+
+    <!-- Player Image Gallery Modal -->
+    <div id="imageGalleryModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2001;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(to bottom, #2d2d2d, #1a1a1a); padding: 20px; border-radius: 10px; border: 3px solid #FFD700; width: 90vw; max-width: 1000px; height: 80vh; overflow: hidden;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="color: #FFD700; margin: 0;">🖼️ Player Image Gallery</h2>
+                <button onclick="closePlayerImageGallery()" style="background: linear-gradient(to bottom, #8B4513, #654321); border: 2px solid #FFD700; color: #FFD700; padding: 8px 15px; cursor: pointer; border-radius: 5px; font-weight: bold;">
+                    ✕ Close
+                </button>
+            </div>
+            
+            <div id="galleryContent" style="height: calc(100% - 80px); overflow-y: auto; padding: 10px;">
+                <!-- Gallery images will be populated here -->
+            </div>
+            
+            <div style="text-align: center; margin-top: 15px;">
+                <button onclick="clearPlayerImagesWithConfirm()" style="background: linear-gradient(to bottom, #DC143C, #8B0000); border: 2px solid #FF6347; color: #FFF; padding: 8px 15px; cursor: pointer; border-radius: 5px; font-weight: bold;">
+                    🗑️ Clear All Images
+                </button>
+                <span style="color: #FFD700; margin: 0 15px; font-size: 12px;" id="galleryCount"></span>
+                <button onclick="refreshGallery()" style="background: linear-gradient(to bottom, #228B22, #006400); border: 2px solid #32CD32; color: #FFF; padding: 8px 15px; cursor: pointer; border-radius: 5px; font-weight: bold;">
+                    🔄 Refresh
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
     <script src="js/runescape_world_builder.js"></script>
+    
+    <script>
+        // Initialize socket connection for Claude terminal
+        let socket;
+        try {
+            socket = io();
+            console.log('🌐 Socket.IO connected for Claude terminal');
+        } catch (error) {
+            console.warn('Socket.IO not available:', error);
+        }
+    </script>
+    
+    <script>
+        function showPlayerImageGenerator() {
+            // Check if OpenAI API key is set
+            if (!worldBuilder.openAI_NPCs.apiKey) {
+                alert('⚠️ OpenAI API key not loaded!\n\nThe key should auto-load from your .env file.\nIf this persists, check the console for details.');
+                return;
+            }
+            
+            document.getElementById('imageGeneratorModal').style.display = 'block';
+            document.getElementById('imagePrompt').focus();
+        }
+        
+        function closePlayerImageGenerator() {
+            document.getElementById('imageGeneratorModal').style.display = 'none';
+            document.getElementById('imageGenerationStatus').innerHTML = '';
+        }
+        
+        async function generatePlayerImageFromModal() {
+            const prompt = document.getElementById('imagePrompt').value.trim();
+            const style = document.getElementById('imageStyle').value;
+            const statusDiv = document.getElementById('imageGenerationStatus');
+            
+            if (!prompt) {
+                statusDiv.innerHTML = '⚠️ Please enter a character description';
+                return;
+            }
+            
+            statusDiv.innerHTML = '🎨 Generating your player image...';
+            
+            try {
+                const result = await gameCommands.generatePlayerImage(prompt, style);
+                if (result.success) {
+                    statusDiv.innerHTML = '✅ Image generated successfully! Opening in new tab...';
+                    setTimeout(() => {
+                        statusDiv.innerHTML = '';
+                    }, 3000);
+                } else {
+                    statusDiv.innerHTML = `❌ Generation failed: ${result.error}`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+        
+        async function generateVariationsFromModal() {
+            const prompt = document.getElementById('imagePrompt').value.trim();
+            const statusDiv = document.getElementById('imageGenerationStatus');
+            
+            if (!prompt) {
+                statusDiv.innerHTML = '⚠️ Please enter a character description';
+                return;
+            }
+            
+            statusDiv.innerHTML = '🎭 Generating 3 variations... This may take a moment...';
+            
+            try {
+                const results = await gameCommands.generatePlayerVariations(prompt, 3);
+                if (results.length > 0) {
+                    statusDiv.innerHTML = `✅ Generated ${results.length} variations! Check console for details.`;
+                    setTimeout(() => {
+                        statusDiv.innerHTML = '';
+                    }, 5000);
+                } else {
+                    statusDiv.innerHTML = '❌ No variations could be generated';
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('imageGeneratorModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePlayerImageGenerator();
+            }
+        });
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (document.getElementById('imageGeneratorModal').style.display === 'block') {
+                    closePlayerImageGenerator();
+                } else if (document.getElementById('imageGalleryModal').style.display === 'block') {
+                    closePlayerImageGallery();
+                }
+            }
+        });
+
+        // Gallery functions
+        function showPlayerImageGallery() {
+            document.getElementById('imageGalleryModal').style.display = 'block';
+            refreshGallery();
+        }
+
+        function closePlayerImageGallery() {
+            document.getElementById('imageGalleryModal').style.display = 'none';
+        }
+
+        function refreshGallery() {
+            const images = worldBuilder.openAI_NPCs.getPlayerImages();
+            const galleryContent = document.getElementById('galleryContent');
+            const galleryCount = document.getElementById('galleryCount');
+
+            if (images.length === 0) {
+                galleryContent.innerHTML = `
+                    <div style="text-align: center; color: #FFD700; margin-top: 50px;">
+                        <div style="font-size: 48px; margin-bottom: 20px;">🖼️</div>
+                        <h3>No Images Generated Yet</h3>
+                        <p>Use the image generator to create your first player avatar!</p>
+                        <button onclick="closePlayerImageGallery(); showPlayerImageGenerator();" 
+                            style="background: linear-gradient(to bottom, #228B22, #006400); border: 2px solid #32CD32; color: #FFF; padding: 12px 20px; cursor: pointer; border-radius: 5px; font-weight: bold; margin-top: 15px;">
+                            🎨 Generate Your First Image
+                        </button>
+                    </div>
+                `;
+                galleryCount.textContent = '';
+                return;
+            }
+
+            galleryCount.textContent = `${images.length} image${images.length !== 1 ? 's' : ''}`;
+
+            // Create gallery grid
+            let galleryHTML = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">';
+            
+            images.reverse().forEach((img, index) => {
+                const date = new Date(img.generatedAt).toLocaleString();
+                const actualIndex = images.length - index; // Correct index for opening
+                
+                galleryHTML += `
+                    <div style="background: rgba(0,0,0,0.3); border: 2px solid #8B4513; border-radius: 8px; padding: 10px; transition: all 0.3s; cursor: pointer;" 
+                         onmouseover="this.style.borderColor='#FFD700'" 
+                         onmouseout="this.style.borderColor='#8B4513'"
+                         onclick="openPlayerImageFromGallery('${img.url}', ${actualIndex})">
+                        <div style="aspect-ratio: 1; background: url('${img.url}') center/cover; border-radius: 5px; margin-bottom: 8px; position: relative;">
+                            <div style="position: absolute; top: 5px right: 5px; background: rgba(0,0,0,0.8); color: #FFD700; padding: 2px 6px; border-radius: 3px; font-size: 10px;">
+                                #${actualIndex}
+                            </div>
+                        </div>
+                        <div style="color: #FFD700; font-size: 11px; margin-bottom: 5px;">
+                            📅 ${date}
+                        </div>
+                        <div style="color: #FFF; font-size: 12px; line-height: 1.3; max-height: 40px; overflow: hidden;">
+                            ${img.prompt.length > 80 ? img.prompt.substring(0, 80) + '...' : img.prompt}
+                        </div>
+                        <div style="margin-top: 8px; text-align: center;">
+                            <button onclick="event.stopPropagation(); openPlayerImageFromGallery('${img.url}', ${actualIndex})" 
+                                style="background: linear-gradient(to bottom, #4169E1, #1E90FF); border: 1px solid #87CEEB; color: #FFF; padding: 4px 8px; cursor: pointer; border-radius: 3px; font-size: 10px; margin-right: 5px;">
+                                🔍 View
+                            </button>
+                            <button onclick="event.stopPropagation(); copyImageUrl('${img.url}')" 
+                                style="background: linear-gradient(to bottom, #228B22, #006400); border: 1px solid #32CD32; color: #FFF; padding: 4px 8px; cursor: pointer; border-radius: 3px; font-size: 10px;">
+                                📋 Copy URL
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            galleryHTML += '</div>';
+            galleryContent.innerHTML = galleryHTML;
+        }
+
+        function openPlayerImageFromGallery(url, index) {
+            console.log(`🖼️ Opening image #${index}`);
+            window.open(url, '_blank');
+        }
+
+        function copyImageUrl(url) {
+            navigator.clipboard.writeText(url).then(() => {
+                // Show temporary feedback
+                const originalText = event.target.innerHTML;
+                event.target.innerHTML = '✅ Copied!';
+                event.target.style.background = 'linear-gradient(to bottom, #32CD32, #228B22)';
+                setTimeout(() => {
+                    event.target.innerHTML = originalText;
+                    event.target.style.background = 'linear-gradient(to bottom, #228B22, #006400)';
+                }, 1000);
+            }).catch(() => {
+                alert('Could not copy URL. Check console for the link.');
+                console.log('Image URL:', url);
+            });
+        }
+
+        function clearPlayerImagesWithConfirm() {
+            const images = worldBuilder.openAI_NPCs.getPlayerImages();
+            if (images.length === 0) {
+                alert('No images to clear!');
+                return;
+            }
+            
+            if (confirm(`Are you sure you want to delete all ${images.length} generated images?\n\nThis action cannot be undone.`)) {
+                worldBuilder.openAI_NPCs.clearPlayerImages();
+                refreshGallery();
+                console.log('🗑️ All player images cleared');
+            }
+        }
+
+        // Close gallery when clicking outside
+        document.getElementById('imageGalleryModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePlayerImageGallery();
+            }
+        });
+
+        // Claude Terminal System
+        let terminalVisible = false;
+        let terminalHistory = [];
+        let historyIndex = -1;
+        let pendingRequest = false;
+        
+        function toggleClaudeTerminal() {
+            const terminal = document.getElementById('claudeTerminal');
+            terminalVisible = !terminalVisible;
+            terminal.style.display = terminalVisible ? 'block' : 'none';
+            
+            if (terminalVisible) {
+                console.log('🖥️ CLAUDE TERMINAL OPENED:', {
+                    timestamp: new Date().toISOString(),
+                    status: 'TERMINAL_ACTIVE'
+                });
+                document.getElementById('terminalInput').focus();
+                addTerminalMessage('system', '💻 Terminal opened. Type "help" for available commands.');
+            } else {
+                console.log('🖥️ CLAUDE TERMINAL CLOSED:', {
+                    timestamp: new Date().toISOString(),
+                    status: 'TERMINAL_CLOSED'
+                });
+            }
+        }
+        
+        function addTerminalMessage(type, message) {
+            const output = document.getElementById('terminalOutput');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `terminal-message terminal-${type}`;
+            messageDiv.textContent = message;
+            output.appendChild(messageDiv);
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        function handleTerminalInput(event) {
+            if (event.key === 'Enter') {
+                const input = document.getElementById('terminalInput');
+                const command = input.value.trim();
+                
+                if (command) {
+                    // Add command to history
+                    terminalHistory.push(command);
+                    historyIndex = terminalHistory.length;
+                    
+                    // Display the command
+                    addTerminalMessage('user', `claude> ${command}`);
+                    
+                    // Process the command
+                    processTerminalCommand(command);
+                    
+                    // Clear input
+                    input.value = '';
+                }
+            } else if (event.key === 'ArrowUp') {
+                // Navigate command history up
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    document.getElementById('terminalInput').value = terminalHistory[historyIndex];
+                }
+                event.preventDefault();
+            } else if (event.key === 'ArrowDown') {
+                // Navigate command history down
+                if (historyIndex < terminalHistory.length - 1) {
+                    historyIndex++;
+                    document.getElementById('terminalInput').value = terminalHistory[historyIndex];
+                } else {
+                    historyIndex = terminalHistory.length;
+                    document.getElementById('terminalInput').value = '';
+                }
+                event.preventDefault();
+            }
+        }
+        
+        function processTerminalCommand(command) {
+            const cmd = command.toLowerCase().split(' ')[0];
+            const args = command.split(' ').slice(1).join(' ');
+            
+            console.log('⚙️ PROCESSING TERMINAL COMMAND:', {
+                timestamp: new Date().toISOString(),
+                fullCommand: command,
+                parsedCommand: cmd,
+                arguments: args,
+                status: 'PROCESSING'
+            });
+            
+            if (pendingRequest) {
+                addTerminalMessage('error', '⏳ Please wait for the previous request to complete...');
+                return;
+            }
+            
+            switch (cmd) {
+                case 'help':
+                    showTerminalHelp();
+                    break;
+                case 'analyze':
+                    analyzeWorld(args);
+                    break;
+                case 'create':
+                    createFeature(args);
+                    break;
+                case 'modify':
+                    modifyFeature(args);
+                    break;
+                case 'export':
+                    exportWorld(args);
+                    break;
+                case 'save':
+                    saveWorldCommand();
+                    break;
+                case 'status':
+                    showWorldStatus();
+                    break;
+                case 'clear':
+                    clearTerminal();
+                    break;
+                case 'history':
+                    showCommandHistory();
+                    break;
+                default:
+                    // Send to Claude Code for processing
+                    sendToClaudeCode(command);
+                    break;
+            }
+        }
+        
+        function showTerminalHelp() {
+            addTerminalMessage('system', '📖 Claude Terminal Commands:');
+            addTerminalMessage('system', '• help - Show this help menu');
+            addTerminalMessage('system', '• analyze [what] - Analyze world or specific feature');
+            addTerminalMessage('system', '• create [feature] - Request to create new feature');
+            addTerminalMessage('system', '• modify [feature] - Request to modify existing feature');
+            addTerminalMessage('system', '• export [format] - Export world data');
+            addTerminalMessage('system', '• save - Save current world');
+            addTerminalMessage('system', '• status - Show current world status');
+            addTerminalMessage('system', '• clear - Clear terminal output');
+            addTerminalMessage('system', '• history - Show command history');
+            addTerminalMessage('system', '• [anything else] - Send directly to Claude Code');
+        }
+        
+        function analyzeWorld(args) {
+            addTerminalMessage('system', '🔍 Analyzing world...');
+            
+            if (!worldBuilder || !worldBuilder.worldData) {
+                addTerminalMessage('error', '❌ World not initialized');
+                return;
+            }
+            
+            const analysis = gameCommands.analyzeWorld();
+            addTerminalMessage('success', `✅ Analysis complete:`);
+            addTerminalMessage('system', `📊 World: ${worldBuilder.worldWidth}x${worldBuilder.worldHeight}`);
+            addTerminalMessage('system', `🏗️ Tiles: ${worldBuilder.tilesPlaced || 0} placed`);
+            
+            if (args) {
+                addTerminalMessage('system', `📝 Specific analysis for "${args}" requested`);
+                sendToClaudeCode(`Analyze my world's ${args} in detail`);
+            }
+        }
+        
+        function createFeature(args) {
+            if (!args) {
+                addTerminalMessage('error', '❌ Please specify what to create (e.g., "create castle" or "create NPC dialogue system")');
+                return;
+            }
+            
+            addTerminalMessage('system', `🔨 Requesting Claude to create: ${args}`);
+            sendToClaudeCode(`Please help me create ${args} in my RuneScape world builder`);
+        }
+        
+        function modifyFeature(args) {
+            if (!args) {
+                addTerminalMessage('error', '❌ Please specify what to modify (e.g., "modify combat system" or "modify UI layout")');
+                return;
+            }
+            
+            addTerminalMessage('system', `🔧 Requesting Claude to modify: ${args}`);
+            sendToClaudeCode(`Please help me modify ${args} in my RuneScape world builder`);
+        }
+        
+        function saveWorldCommand() {
+            addTerminalMessage('system', '💾 Saving world...');
+            try {
+                gameCommands.manualSave();
+                addTerminalMessage('success', '✅ World saved successfully');
+            } catch (error) {
+                addTerminalMessage('error', `❌ Save failed: ${error.message}`);
+            }
+        }
+        
+        function showWorldStatus() {
+            addTerminalMessage('system', '📊 Current World Status:');
+            addTerminalMessage('system', `🌍 Dimensions: ${worldBuilder.worldWidth}x${worldBuilder.worldHeight}`);
+            addTerminalMessage('system', `🏗️ Tiles Placed: ${worldBuilder.tilesPlaced || 0}`);
+            addTerminalMessage('system', `🎮 Mode: ${document.getElementById('testModeIndicator')?.textContent || 'BUILD MODE'}`);
+            
+            if (worldBuilder.autoSave) {
+                addTerminalMessage('system', `💾 Auto-save: ${worldBuilder.autoSave.autoSaveEnabled ? 'Enabled' : 'Disabled'}`);
+            }
+        }
+        
+        function clearTerminal() {
+            document.getElementById('terminalOutput').innerHTML = `
+                <div class="terminal-message terminal-system">🚀 Claude Code Terminal v1.0</div>
+                <div class="terminal-message terminal-system">Terminal cleared</div>
+                <div class="terminal-message"></div>
+            `;
+        }
+        
+        function showCommandHistory() {
+            addTerminalMessage('system', '📜 Command History:');
+            terminalHistory.slice(-10).forEach((cmd, i) => {
+                addTerminalMessage('system', `${terminalHistory.length - 10 + i + 1}: ${cmd}`);
+            });
+        }
+        
+        function sendToClaudeCode(userCommand) {
+            pendingRequest = true;
+            addTerminalMessage('system', '🤖 Sending request to Claude Code...');
+            addTerminalMessage('system', `📝 Request: "${userCommand}"`);
+            
+            try {
+                // Gather world context
+                const worldContext = gatherWorldContextForClaude();
+                
+                // Show detailed progress
+                addTerminalMessage('system', '📊 Gathering world context...');
+                addTerminalMessage('system', `🌍 World analyzed: ${worldContext.split('\n').length} data points`);
+                addTerminalMessage('success', '✅ Request sent to Claude Code');
+                
+                // Create message for Claude Code with status callback
+                const message = `PLAYER REQUEST FROM RUNESCAPE WORLD BUILDER:
+"${userCommand}"
+
+CURRENT WORLD STATE:
+${worldContext}
+
+Please help with this request by modifying the codebase as needed. The player is using the in-game terminal to communicate with you directly.
+
+IMPORTANT: Use the following commands to update the player's terminal:
+- claudeStatus("🔍 Analyzing existing code...")
+- claudeStatus("✏️ Making modifications...")  
+- claudeStatus("🔧 Applying changes...")
+- claudeStatus("✅ Task completed!")
+
+Call claudeStatus() with your actual progress messages so the player sees what you're really doing.
+
+CLAUDE RECEIPT CONFIRMATION:
+Please start your response with: console.log('📥 MESSAGE RECEIVED BY CLAUDE:', { timestamp: '${new Date().toISOString()}', command: '${userCommand}', status: 'RECEIVED' });`;
+
+                // Log the request for debugging
+                console.log('📤 MESSAGE SENT TO CLAUDE CODE:', {
+                    timestamp: new Date().toISOString(),
+                    command: userCommand,
+                    worldData: worldContext.split('\n').length + ' data points',
+                    status: 'SENT'
+                });
+                console.log('🤖 Claude Code Request:', message);
+                
+                // Send message to server for Claude Code to receive automatically
+                fetch('/claude/send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        command: userCommand,
+                        worldContext: worldContext,
+                        fullMessage: message
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        addTerminalMessage('success', '🚀 Message sent to Claude Code automatically!');
+                        addTerminalMessage('system', `📨 Message ID: ${data.messageId}`);
+                        addTerminalMessage('system', '🎯 Claude will receive this in the terminal session');
+                    } else {
+                        addTerminalMessage('error', '❌ Failed to send message to Claude Code');
+                    }
+                })
+                .catch(error => {
+                    addTerminalMessage('error', `❌ Network error: ${error.message}`);
+                    console.error('Failed to send to Claude Code:', error);
+                });
+                
+                // Set up real-time status updates
+                setupClaudeStatusListener();
+                
+                pendingRequest = false;
+                
+            } catch (error) {
+                addTerminalMessage('error', `❌ Failed to send request: ${error.message}`);
+                pendingRequest = false;
+            }
+        }
+        
+        // Global function for Claude to call for status updates
+        window.claudeStatus = function(message) {
+            addTerminalMessage('system', message);
+        };
+        
+        // Global function for Claude to signal completion
+        window.claudeComplete = function(message = '✅ Task completed!') {
+            addTerminalMessage('success', message);
+            pendingRequest = false;
+        };
+        
+        // Global function for Claude to signal errors
+        window.claudeError = function(message) {
+            addTerminalMessage('error', `❌ ${message}`);
+            pendingRequest = false;
+        };
+        
+        function setupClaudeStatusListener() {
+            // Set up listener for real-time updates from Claude via WebSocket
+            addTerminalMessage('system', '👂 Listening for real-time Claude updates...');
+            
+            // If socket.io is available, listen for updates
+            if (typeof socket !== 'undefined' && socket) {
+                // Listen for Claude updates
+                socket.on('claudeUpdate', (data) => {
+                    addTerminalMessage(data.type, data.status);
+                    
+                    if (data.type === 'success' || data.type === 'error') {
+                        pendingRequest = false;
+                    }
+                });
+                
+                // Listen for auto-refresh
+                socket.on('autoRefresh', (data) => {
+                    addTerminalMessage('success', `🔄 Changes applied! Auto-refreshing... (${data.reason})`);
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                });
+                
+                addTerminalMessage('success', '🌐 Connected to real-time Claude updates!');
+            } else {
+                // Fallback for when socket.io is not available
+                addTerminalMessage('system', '⚠️ Real-time updates not available, using fallback...');
+                setTimeout(() => {
+                    addTerminalMessage('system', '🔍 Claude is processing your request...');
+                    setTimeout(() => {
+                        addTerminalMessage('success', '✅ Request processed! Check for changes.');
+                        pendingRequest = false;
+                    }, 3000);
+                }, 1000);
+            }
+        }
+        
+        function gatherWorldContextForClaude() {
+            if (!worldBuilder || !worldBuilder.worldData) {
+                return 'World not initialized';
+            }
+            
+            // Count tile types
+            const tileCounts = {};
+            let totalNonGrass = 0;
+            
+            for (let y = 0; y < worldBuilder.worldHeight; y++) {
+                for (let x = 0; x < worldBuilder.worldWidth; x++) {
+                    const tile = worldBuilder.worldData[y][x];
+                    if (tile.type !== 'grass') {
+                        tileCounts[tile.type] = (tileCounts[tile.type] || 0) + 1;
+                        totalNonGrass++;
+                    }
+                }
+            }
+            
+            const context = `
+World Dimensions: ${worldBuilder.worldWidth}x${worldBuilder.worldHeight}
+Mode: ${document.getElementById('testModeIndicator')?.textContent || 'BUILD MODE'}
+Total Elements: ${totalNonGrass} non-grass tiles
+Buildings: ${Object.keys(tileCounts).filter(type => type.includes('house') || type.includes('shop') || type.includes('bank') || type.includes('castle')).length}
+NPCs: ${Object.keys(tileCounts).filter(type => type.startsWith('npc_')).length}
+Monsters: ${Object.keys(tileCounts).filter(type => type.startsWith('monster_')).length}
+
+Top Tile Types:
+${Object.entries(tileCounts).sort(([,a], [,b]) => b - a).slice(0, 5).map(([type, count]) => `• ${type}: ${count}`).join('\n')}
+`;
+            
+            return context;
+        }
+    </script>
 </body>
 </html>

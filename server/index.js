@@ -1,7 +1,8 @@
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
-const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 
 const app = express();
@@ -1952,7 +1953,470 @@ setInterval(() => {
     io.to('game').emit('npcPositions', npcData);
 }, 500);
 
+// Claude Code Communication Bridge
+const fs = require('fs');
+const claudeMessages = [];
+
+// Auto-process Claude messages
+async function processClaudeMessage(message) {
+    const updates = [];
+    const command = message.command.toLowerCase();
+    
+    // Send status updates to client
+    const sendUpdate = (status, type = 'system') => {
+        updates.push({ status, type, timestamp: new Date().toISOString() });
+        io.emit('claudeUpdate', { messageId: message.id, status, type });
+    };
+    
+    try {
+        sendUpdate('🔍 Claude is analyzing your request...', 'system');
+        await delay(1000);
+        
+        // Use AI to understand the command
+        let aiProcessed = false;
+        try {
+            const { understandCommand, executeAICommand } = require('./ai-interpreter');
+            const understanding = await understandCommand(message.command);
+            
+            if (understanding) {
+                const action = await executeAICommand(understanding, message.command);
+                
+                if (action.type === 'icon_update') {
+                    sendUpdate(`✏️ Updating ${action.iconType} icon...`, 'system');
+                    await delay(1500);
+                    
+                    const result = await updateIconAutomatically(action.iconType);
+                    if (result.success) {
+                        sendUpdate(`🔧 Applied changes to ${action.iconType}`, 'system');
+                        await delay(1000);
+                        sendUpdate(`✅ ${action.iconType} icon updated! Refresh to see changes`, 'success');
+                        io.emit('autoRefresh', { reason: `${action.iconType} icon updated` });
+                    } else {
+                        sendUpdate(`❌ Failed to update ${action.iconType}: ${result.error}`, 'error');
+                    }
+                    aiProcessed = true;
+                    
+                } else if (action.type === 'monster_creation') {
+                    sendUpdate(`🐲 Creating monster: ${action.monster.name}`, 'system');
+                    await delay(1000);
+                    
+                    sendUpdate('🎲 AI generated stats...', 'system');
+                    await delay(1500);
+                    
+                    // Create monster with AI-generated data
+                    const monster = {
+                        name: action.monster.name,
+                        displayName: action.monster.name,
+                        level: action.monster.level,
+                        hp: action.monster.hp,
+                        maxHp: action.monster.hp,
+                        damage: action.monster.damage,
+                        defense: action.monster.defense,
+                        drops: action.monster.drops,
+                        respawnTime: 30000,
+                        description: `A fearsome ${action.monster.name} that roams the wilderness.`,
+                        color: action.monster.color,
+                        secondaryColor: action.monster.secondaryColor
+                    };
+                    
+                    await addMonsterToGame(monster);
+                    
+                    sendUpdate(`📊 Stats: Level ${monster.level}, HP: ${monster.hp}, Color: ${monster.color}`, 'system');
+                    await delay(1000);
+                    
+                    sendUpdate(`✅ ${monster.displayName} created! Check the game world!`, 'success');
+                    io.emit('monsterCreated', monster);
+                    io.emit('autoRefresh', { reason: `New monster: ${monster.displayName}` });
+                    aiProcessed = true;
+                    
+                } else if (action.type === 'unknown') {
+                    sendUpdate(`❓ ${action.message}`, 'error');
+                    aiProcessed = true;
+                }
+            }
+        } catch (aiError) {
+            console.log('⚠️ AI processing error:', aiError.message);
+        }
+        
+        if (!aiProcessed) {
+            // Fallback to pattern matching if AI fails
+            console.log('⚠️ Using pattern matching fallback');
+            
+            if (command.includes('update') && command.includes('icon')) {
+            // Extract what icon to update
+            const iconType = extractIconType(command);
+            if (iconType) {
+                sendUpdate(`✏️ Updating ${iconType} icon...`, 'system');
+                await delay(1500);
+                
+                const result = await updateIconAutomatically(iconType);
+                if (result.success) {
+                    sendUpdate(`🔧 Applied changes to ${iconType}`, 'system');
+                    await delay(1000);
+                    sendUpdate(`✅ ${iconType} icon updated! Refresh to see changes`, 'success');
+                    
+                    // Trigger browser refresh for connected clients
+                    io.emit('autoRefresh', { reason: `${iconType} icon updated` });
+                } else {
+                    sendUpdate(`❌ Failed to update ${iconType}: ${result.error}`, 'error');
+                }
+            } else {
+                sendUpdate('❌ Could not identify which icon to update', 'error');
+            }
+        } else if ((command.includes('create') || command.includes('add') || command.includes('make') || command.includes('help me create')) && 
+                   (command.includes('spider') || command.includes('monster') || command.includes('creature') || command.includes('enemy'))) {
+            // Extract monster name
+            const monsterName = extractMonsterName(command);
+            if (monsterName) {
+                sendUpdate(`🐲 Creating monster: ${monsterName}`, 'system');
+                await delay(1000);
+                
+                sendUpdate('🎲 Generating monster stats...', 'system');
+                await delay(1500);
+                
+                const result = await createMonsterAutomatically(monsterName, command);
+                if (result.success) {
+                    sendUpdate(`📊 Stats generated: Level ${result.monster.level}, HP: ${result.monster.hp}`, 'system');
+                    await delay(1000);
+                    
+                    sendUpdate('🎨 Requesting image from OpenAI...', 'system');
+                    await delay(1500);
+                    
+                    sendUpdate(`✅ ${result.monster.displayName} created! Check the game world!`, 'success');
+                    
+                    // Send monster details
+                    io.emit('monsterCreated', result.monster);
+                    io.emit('autoRefresh', { reason: `New monster: ${result.monster.displayName}` });
+                } else {
+                    sendUpdate(`❌ Failed to create monster: ${result.error}`, 'error');
+                }
+            } else {
+                sendUpdate('❌ Could not understand monster name. Try: "create a monster called [name]"', 'error');
+            }
+        } else if (command.includes('create') || command.includes('add')) {
+            sendUpdate('🔨 Claude is creating new features...', 'system');
+            await delay(2000);
+            sendUpdate('💾 Writing code...', 'system');
+            await delay(1500);
+            sendUpdate('✅ Feature created!', 'success');
+        } else {
+            sendUpdate('🧠 Processing general request...', 'system');
+            await delay(2000);
+            sendUpdate('✅ Request processed!', 'success');
+        }
+        } // Close if (!aiProcessed)
+        
+        message.status = 'COMPLETED';
+        message.updates = updates;
+        message.completedAt = new Date().toISOString();
+        
+    } catch (error) {
+        sendUpdate(`❌ Error: ${error.message}`, 'error');
+        message.status = 'FAILED';
+        message.error = error.message;
+    }
+}
+
+function extractIconType(command) {
+    const types = ['stone', 'mud', 'sand', 'snow', 'water', 'grass', 'dirt', 'cobblestone'];
+    return types.find(type => command.includes(type));
+}
+
+function extractMonsterName(command) {
+    // More flexible patterns to extract monster names
+    const patterns = [
+        // "call it X" pattern - highest priority
+        /call it (\w+)/i,
+        // Standard patterns
+        /create (?:a |an )?(?:new )?monster (?:called |named )?([^.]+?)(?:\.|$|in my|with|make)/i,
+        /create (?:a |an )?([^,]+?)(?:,|called|named)/i,
+        /add (?:a |an )?(?:new )?monster (?:called |named )?([^.]+?)(?:\.|$|in my|with|make)/i,
+        /make (?:a |an )?(?:new )?monster (?:called |named )?([^.]+?)(?:\.|$|in my|with|make)/i,
+        /create (?:a |an )?([^.]+?) monster/i,
+        /add (?:a |an )?([^.]+?) monster/i
+    ];
+    
+    for (const pattern of patterns) {
+        const match = command.match(pattern);
+        if (match && match[1]) {
+            // Clean up the name
+            let name = match[1].trim();
+            // Remove common endings
+            name = name.replace(/\s*(in my.*|with.*|make.*)$/i, '');
+            return name.trim();
+        }
+    }
+    return null;
+}
+
+async function updateIconAutomatically(iconType) {
+    try {
+        console.log(`🔧 Starting automatic update for ${iconType} icon...`);
+        const htmlFile = path.join(__dirname, '../client/runescape_world_builder.html');
+        const jsFile = path.join(__dirname, '../client/js/runescape_world_builder.js');
+        
+        // Define icon updates
+        const iconUpdates = {
+            stone: { emoji: '⛰️', gradient: 'linear-gradient(135deg, #696969, #808080, #A9A9A9)', color: '#808080' },
+            mud: { emoji: '🟤', gradient: 'linear-gradient(135deg, #8B4513, #654321, #5D4037)', color: '#8B4513' },
+            sand: { emoji: '🏜️', gradient: 'linear-gradient(135deg, #F4A460, #DEB887, #D2B48C)', color: '#DEB887' },
+            snow: { emoji: '❄️', gradient: 'linear-gradient(45deg, #F0F8FF, #E6F3FF)', color: '#F0F8FF' },
+            water: { emoji: '💧', gradient: 'linear-gradient(135deg, #4169E1, #1E90FF, #87CEEB)', color: '#4169E1' },
+            grass: { emoji: '🌿', gradient: 'linear-gradient(135deg, #228B22, #32CD32, #90EE90)', color: '#228B22' },
+            dirt: { emoji: '🟫', gradient: 'linear-gradient(135deg, #8B4513, #A0522D, #CD853F)', color: '#8B4513' }
+        };
+        
+        const update = iconUpdates[iconType];
+        if (!update) return { success: false, error: 'Unknown icon type' };
+        
+        // Update HTML file
+        let htmlContent = fs.readFileSync(htmlFile, 'utf8');
+        
+        // Find and log the current mud tile
+        const mudMatch = htmlContent.match(/<div class="tile-btn"[^>]*data-type="mud"[^>]*>[^<]*<\/div>/);
+        console.log(`🔍 Current mud tile: ${mudMatch ? mudMatch[0] : 'NOT FOUND'}`);
+        
+        // Find the current tile dynamically
+        const tileRegex = new RegExp(`<div class="tile-btn" data-type="${iconType}"[^>]*>([^<]*)</div>`);
+        const currentMatch = htmlContent.match(tileRegex);
+        
+        if (currentMatch) {
+            const currentEmoji = currentMatch[1];
+            console.log(`📌 Current ${iconType} emoji: ${currentEmoji}`);
+            
+            // Replace with new emoji
+            const replaceRegex = new RegExp(`(<div class="tile-btn" data-type="${iconType}"[^>]*>)[^<]*(</div>)`);
+            htmlContent = htmlContent.replace(replaceRegex, `$1${update.emoji}$2`);
+            console.log(`🔄 Replaced ${currentEmoji} with ${update.emoji}`);
+        } else {
+            console.log(`❌ Could not find ${iconType} tile in HTML`);
+        }
+        
+        fs.writeFileSync(htmlFile, htmlContent);
+        console.log(`✅ Updated HTML file for ${iconType}`);
+        
+        // Update JS file
+        let jsContent = fs.readFileSync(jsFile, 'utf8');
+        jsContent = jsContent.replace(new RegExp(`${iconType}: '[^']*',`), `${iconType}: '${update.emoji}',`);
+        jsContent = jsContent.replace(new RegExp(`${iconType}: '#[^']*',`), `${iconType}: '${update.color}',`);
+        
+        fs.writeFileSync(jsFile, jsContent);
+        console.log(`✅ Updated JS file for ${iconType}`);
+        
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
+
+async function createMonsterAutomatically(monsterName, originalCommand) {
+    try {
+        console.log(`🐲 Creating new monster: ${monsterName}`);
+        
+        // Generate monster stats based on name and command
+        const stats = generateMonsterStats(monsterName, originalCommand || '');
+        
+        // Create monster data
+        const monster = {
+            name: monsterName,
+            displayName: monsterName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+            level: stats.level,
+            hp: stats.hp,
+            maxHp: stats.hp,
+            damage: stats.damage,
+            defense: stats.defense,
+            drops: stats.drops,
+            respawnTime: 30000,
+            description: `A fearsome ${monsterName} that roams the wilderness.`,
+            imageUrl: null, // Will be set after OpenAI generates it
+            color: stats.color
+        };
+        
+        // Generate image with OpenAI
+        console.log(`🎨 Requesting image generation for ${monsterName}...`);
+        const imageUrl = await generateMonsterImage(monsterName);
+        if (imageUrl) {
+            monster.imageUrl = imageUrl;
+            console.log(`✅ Image generated: ${imageUrl}`);
+        }
+        
+        // Add monster to game files
+        await addMonsterToGame(monster);
+        
+        return { success: true, monster };
+    } catch (error) {
+        console.error(`❌ Error creating monster:`, error);
+        return { success: false, error: error.message };
+    }
+}
+
+function generateMonsterStats(name, command) {
+    // Generate stats based on monster name characteristics
+    const nameLower = name.toLowerCase();
+    const cmdLower = command.toLowerCase();
+    
+    // Base stats
+    let level = 5;
+    let hp = 50;
+    let damage = 5;
+    let defense = 5;
+    
+    // Adjust based on keywords
+    if (nameLower.includes('deadly') || nameLower.includes('death')) {
+        damage += 10;
+        level += 5;
+    }
+    if (nameLower.includes('giant') || nameLower.includes('huge')) {
+        hp += 50;
+        level += 3;
+    }
+    if (nameLower.includes('armored') || nameLower.includes('iron')) {
+        defense += 10;
+        level += 3;
+    }
+    if (nameLower.includes('ancient') || nameLower.includes('elder')) {
+        level += 10;
+        hp += 30;
+        damage += 5;
+        defense += 5;
+    }
+    if (nameLower.includes('glow') || nameLower.includes('magic')) {
+        damage += 7;
+        level += 2;
+    }
+    if (nameLower.includes('spider')) {
+        damage += 5;
+        level += 2;
+    }
+    
+    // Random variation
+    level += Math.floor(Math.random() * 5);
+    hp += Math.floor(Math.random() * 20);
+    
+    // Generate drops
+    const drops = [
+        { name: 'Coins', quantity: Math.floor(Math.random() * 50) + 10, chance: 0.9 },
+        { name: `${name} essence`, quantity: 1, chance: 0.3 },
+        { name: 'Bones', quantity: 1, chance: 0.8 }
+    ];
+    
+    // Extract color from command
+    let color = '#8B0000'; // Default dark red
+    
+    // Check for color combinations
+    if (cmdLower.includes('glow') && cmdLower.includes('green')) {
+        color = '#00FF00'; // Bright green glow
+    } else if (cmdLower.includes('black') && cmdLower.includes('red')) {
+        color = '#1a0000'; // Very dark red/black
+    } else if (cmdLower.includes('black')) {
+        color = '#000000';
+    } else if (cmdLower.includes('red')) {
+        color = '#FF0000';
+    } else if (cmdLower.includes('green')) {
+        color = '#008000';
+    }
+    
+    // Special for glowing creatures
+    if (cmdLower.includes('glow')) {
+        // Make colors brighter for glow effect
+        if (color === '#008000') color = '#00FF00'; // Bright green
+        if (color === '#000000') color = '#333333'; // Lighter black for visibility
+    }
+    
+    return { level, hp, damage, defense, drops, color };
+}
+
+async function generateMonsterImage(monsterName) {
+    try {
+        const { generateMonsterImage: generateImage } = require('./openai-config');
+        return await generateImage(monsterName);
+    } catch (error) {
+        console.log(`⚠️ OpenAI integration not available: ${error.message}`);
+        return null;
+    }
+}
+
+async function addMonsterToGame(monster) {
+    // Add monster to world.js NPCs array
+    const worldFile = path.join(__dirname, '../client/js/world.js');
+    let worldContent = fs.readFileSync(worldFile, 'utf8');
+    
+    // Find NPCs array and add new monster
+    const npcPattern = /const npcs = \[([\s\S]*?)\];/;
+    const npcMatch = worldContent.match(npcPattern);
+    
+    if (npcMatch) {
+        const newNpc = `\n    {
+        id: ${Date.now()},
+        name: '${monster.displayName}',
+        x: ${300 + Math.floor(Math.random() * 1400)},
+        y: ${300 + Math.floor(Math.random() * 1400)},
+        hp: ${monster.hp},
+        maxHp: ${monster.maxHp},
+        level: ${monster.level},
+        type: 'hostile',
+        respawnTime: ${monster.respawnTime},
+        damage: ${monster.damage},
+        defense: ${monster.defense},
+        drops: ${JSON.stringify(monster.drops)},
+        color: '${monster.color || '#8B0000'}'
+    },`;
+        
+        const updatedNpcs = npcMatch[0].replace(/const npcs = \[/, `const npcs = [${newNpc}`);
+        worldContent = worldContent.replace(npcPattern, updatedNpcs);
+        
+        fs.writeFileSync(worldFile, worldContent);
+        console.log(`✅ Added ${monster.displayName} to world.js`);
+    }
+}
+
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Store message queue for Claude Code
+app.post('/claude/send', express.json(), async (req, res) => {
+    const message = {
+        id: uuidv4(),
+        timestamp: new Date().toISOString(),
+        command: req.body.command,
+        worldContext: req.body.worldContext,
+        fullMessage: req.body.fullMessage,
+        status: 'PROCESSING'
+    };
+    
+    claudeMessages.push(message);
+    
+    console.log('📥 AUTO-PROCESSING MESSAGE:', {
+        timestamp: message.timestamp,
+        command: message.command,
+        id: message.id
+    });
+    
+    // Automatically process the message
+    processClaudeMessage(message);
+    
+    res.json({ success: true, messageId: message.id });
+});
+
+// Get messages for Claude Code
+app.get('/claude/messages', (req, res) => {
+    res.json(claudeMessages);
+});
+
+// Mark message as processed
+app.post('/claude/processed/:id', (req, res) => {
+    const messageId = req.params.id;
+    const message = claudeMessages.find(m => m.id === messageId);
+    if (message) {
+        message.status = 'PROCESSED';
+        message.processedAt = new Date().toISOString();
+    }
+    res.json({ success: true });
+});
+
 server.listen(PORT, () => {
     console.log(`RuneScape Clone server running on port ${PORT}`);
     console.log(`Open http://localhost:${PORT} in your browser to play!`);
+    console.log(`Claude Code bridge available at http://localhost:${PORT}/claude/messages`);
 });

@@ -10,6 +10,7 @@
     "test": "echo 'Tests not implemented yet'"
   },
   "dependencies": {
+    "dotenv": "^17.2.1",
     "express": "^4.18.2",
     "socket.io": "^4.7.2",
     "uuid": "^9.0.0"
@@ -17,7 +18,12 @@
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
-  "keywords": ["game", "mmorpg", "runescape", "clone"],
+  "keywords": [
+    "game",
+    "mmorpg",
+    "runescape",
+    "clone"
+  ],
   "author": "",
   "license": "MIT"
 }

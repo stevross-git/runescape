@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Claude WebSocket</title>
+</head>
+<body>
+    <h1>Claude WebSocket Test</h1>
+    <div id="status">Connecting...</div>
+    <div id="messages"></div>
+    <br>
+    <button onclick="sendTestMessage()">Send Test Message</button>
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const statusDiv = document.getElementById('status');
+        const messagesDiv = document.getElementById('messages');
+        
+        let socket;
+        
+        try {
+            socket = io();
+            statusDiv.innerHTML = '✅ Connected to server';
+            
+            // Listen for Claude updates
+            socket.on('claudeUpdate', (data) => {
+                const msg = document.createElement('div');
+                msg.innerHTML = `📥 ${data.type}: ${data.status}`;
+                messagesDiv.appendChild(msg);
+            });
+            
+            // Listen for auto-refresh
+            socket.on('autoRefresh', (data) => {
+                const msg = document.createElement('div');
+                msg.innerHTML = `🔄 Auto-refresh: ${data.reason}`;
+                messagesDiv.appendChild(msg);
+            });
+            
+        } catch (error) {
+            statusDiv.innerHTML = '❌ Connection failed: ' + error.message;
+        }
+        
+        function sendTestMessage() {
+            fetch('/claude/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    command: 'update grass icon',
+                    worldContext: 'Test context',
+                    fullMessage: 'Test automatic processing'
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                const msg = document.createElement('div');
+                msg.innerHTML = `📤 Sent message: ${data.messageId}`;
+                messagesDiv.appendChild(msg);
+            });
+        }
+    </script>
+</body>
+</html>

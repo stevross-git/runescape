@@ -13,7 +13,12 @@
       "Bash(move:*)",
       "Bash(mv:*)",
       "Bash(copy:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(rm:*)",
+      "Bash(ls:*)",
+      "Bash(true)",
+      "Bash(./restart_server.bat)",
+      "Bash(npm install:*)"
     ],
     "deny": []
   }
