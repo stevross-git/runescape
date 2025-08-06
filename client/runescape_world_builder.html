@@ -117,6 +117,78 @@
             padding: 15px;
         }
         
+        .custom-content-section {
+            margin-bottom: 20px;
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid #FFD700;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        
+        .custom-content-section h3 {
+            color: #FFD700;
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            text-align: center;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            border-bottom: 1px solid #FFD700;
+            padding-bottom: 5px;
+        }
+        
+        .custom-item {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #666;
+            border-radius: 4px;
+            padding: 6px;
+            margin: 3px 0;
+            color: #FFF;
+            font-size: 10px;
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+        
+        .custom-item:hover {
+            background: rgba(255, 215, 0, 0.2);
+            border-color: #FFD700;
+        }
+        
+        .custom-item-name {
+            font-weight: bold;
+            color: #FFD700;
+            font-size: 11px;
+        }
+        
+        .custom-item-stats {
+            font-size: 9px;
+            color: #CCC;
+            margin-top: 2px;
+        }
+        
+        .custom-refresh-btn {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #000;
+            border: none;
+            padding: 6px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: bold;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+        
+        .custom-refresh-btn:hover {
+            background: linear-gradient(45deg, #FFA500, #FF8C00);
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #888;
+            font-style: italic;
+            padding: 10px;
+            font-size: 10px;
+        }
+        
         .tile-category {
             margin-bottom: 20px;
             background: rgba(139, 69, 19, 0.2);
@@ -184,6 +256,106 @@
         
         .tile-btn:hover::after {
             opacity: 1;
+        }
+
+        /* Tooltip System */
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #FFD700;
+            border-radius: 8px;
+            padding: 12px;
+            color: #FFD700;
+            font-size: 12px;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
+            max-width: 300px;
+            min-width: 200px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .tooltip.show {
+            opacity: 1;
+        }
+
+        .tooltip-title {
+            color: #FFD700;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            border-bottom: 1px solid #8B4513;
+            padding-bottom: 4px;
+        }
+
+        .tooltip-category {
+            color: #FFA500;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .tooltip-description {
+            color: #E6E6E6;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+
+        .tooltip-stats {
+            background: rgba(139, 69, 19, 0.3);
+            border-radius: 4px;
+            padding: 6px;
+            margin: 6px 0;
+        }
+
+        .tooltip-stat {
+            display: flex;
+            justify-content: space-between;
+            margin: 3px 0;
+            font-size: 11px;
+        }
+
+        .tooltip-stat-label {
+            color: #FFA500;
+        }
+
+        .tooltip-stat-value {
+            color: #90EE90;
+            font-weight: bold;
+        }
+
+        .tooltip-variants {
+            background: rgba(75, 0, 130, 0.3);
+            border-radius: 4px;
+            padding: 6px;
+            margin: 6px 0;
+        }
+
+        .tooltip-variants-title {
+            color: #DDA0DD;
+            font-size: 11px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .tooltip-usage {
+            color: #87CEEB;
+            font-size: 10px;
+            font-style: italic;
+            margin-top: 8px;
+        }
+
+        .tooltip-keyboard {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-family: monospace;
+            color: #FFD700;
+            font-size: 10px;
+            margin: 0 2px;
         }
         
         .coords {
@@ -254,21 +426,6 @@
             box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
         }
         
-        .status-bar {
-            position: fixed;
-            bottom: 0;
-            left: 220px;
-            right: 280px;
-            height: 30px;
-            background: linear-gradient(to bottom, #8B4513, #654321);
-            border-top: 2px solid #FFD700;
-            display: flex;
-            align-items: center;
-            padding: 0 15px;
-            color: #FFD700;
-            font-size: 12px;
-            font-weight: bold;
-        }
         
         /* Claude Terminal Styles */
         .claude-terminal {
@@ -364,10 +521,30 @@
         <h1>🏰 RuneScape World Builder</h1>
         
         <div class="tool-group">
-            <button class="tool-btn active" data-tool="paint">🖌️ Paint</button>
-            <button class="tool-btn" data-tool="erase">🧽 Erase</button>
-            <button class="tool-btn" data-tool="fill">🪣 Fill</button>
-            <button class="tool-btn" data-tool="select">👆 Select</button>
+            <button class="tool-btn active" data-tool="paint" 
+                    data-tooltip-title="Paint Tool" 
+                    data-tooltip-category="Drawing Tool"
+                    data-tooltip-description="Paint tiles one by one or with a brush. Click and drag to paint multiple tiles."
+                    data-tooltip-stats="Brush Size|Adjustable|Precision|High|Speed|Fast"
+                    data-tooltip-usage="Left click to paint, drag for continuous painting. Use <span class='tooltip-keyboard'>Shift+Click</span> for straight lines.">🖌️ Paint</button>
+            <button class="tool-btn" data-tool="erase"
+                    data-tooltip-title="Erase Tool"
+                    data-tooltip-category="Drawing Tool" 
+                    data-tooltip-description="Remove tiles and return them to grass. Perfect for corrections and clearing areas."
+                    data-tooltip-stats="Brush Size|Adjustable|Precision|High|Speed|Fast"
+                    data-tooltip-usage="Left click to erase, drag for continuous erasing. <span class='tooltip-keyboard'>Ctrl+Z</span> to undo.">🧽 Erase</button>
+            <button class="tool-btn" data-tool="fill"
+                    data-tooltip-title="Fill Tool"
+                    data-tooltip-category="Drawing Tool"
+                    data-tooltip-description="Fill large connected areas with the selected tile type. Great for terrain creation."
+                    data-tooltip-stats="Area Fill|Unlimited|Precision|Perfect|Speed|Instant"
+                    data-tooltip-usage="Click on any tile to fill the entire connected area of that type.">🪣 Fill</button>
+            <button class="tool-btn" data-tool="select"
+                    data-tooltip-title="Select Tool"
+                    data-tooltip-category="Utility Tool"
+                    data-tooltip-description="Select and inspect tiles to see their properties and stats."
+                    data-tooltip-stats="Info Display|Full|Selection|Single|Speed|Instant"
+                    data-tooltip-usage="Click any tile to see its details, variants, and properties.">👆 Select</button>
         </div>
         
         <div class="tool-group">
@@ -377,16 +554,48 @@
         </div>
         
         <div class="tool-group">
-            <button class="tool-btn" onclick="clearWorld()">🗑️ Clear</button>
-            <button class="tool-btn" onclick="generateLumbridge()">🏠 Lumbridge</button>
-            <button class="tool-btn" onclick="generateVarrock()">🏰 Varrock</button>
-            <button class="tool-btn" onclick="generateFalador()">⚔️ Falador</button>
+            <button class="tool-btn" onclick="clearWorld()" 
+                data-tooltip-title="Clear World" 
+                data-tooltip-category="World Management"
+                data-tooltip-description="Remove all tiles and reset the world to empty grass terrain."
+                data-tooltip-stats="Action|Destructive|Undo|Not Available|Scope|Entire World"
+                data-tooltip-usage="⚠️ Warning: This will permanently delete all your work. <span class='tooltip-keyboard'>Use with caution!</span>">🗑️ Clear</button>
+            <button class="tool-btn" onclick="generateLumbridge()" 
+                data-tooltip-title="Medieval Fantasy City" 
+                data-tooltip-category="Template World"
+                data-tooltip-description="Complete medieval city showcasing all advanced features: multi-variant tiles, AI systems, complex districts."
+                data-tooltip-stats="Buildings|30+|Districts|5|Features|Castle, moat, markets, nobles|AI Ready|Full integration"
+                data-tooltip-usage="Perfect demonstration of advanced world builder capabilities. <span class='tooltip-keyboard'>Features everything!</span>">🏰 Medieval City</button>
+                
+            <button class="tool-btn" onclick="generateVarrock()" 
+                data-tooltip-title="Tropical Island Paradise" 
+                data-tooltip-category="Template World"
+                data-tooltip-description="Beautiful island setting with beaches, palm trees, resort village, and satellite islands."
+                data-tooltip-stats="Biomes|Ocean, Beach, Jungle|Islands|3|Activities|Fishing, treasure hunting|Style|Tropical"
+                data-tooltip-usage="Showcases biome diversity and natural world generation. <span class='tooltip-keyboard'>Perfect for adventures!</span>">🏝️ Tropical Island</button>
+                
+            <button class="tool-btn" onclick="generateFalador()" 
+                data-tooltip-title="Australian Outback Town" 
+                data-tooltip-category="Template World"
+                data-tooltip-description="Authentic outback settlement with unique Australian elements: billabong, gum trees, gold mines, pub."
+                data-tooltip-stats="Features|Billabong, airstrip, rodeo|Mining|Gold, iron ore|Culture|True Aussie elements|Terrain|Red earth, drought"
+                data-tooltip-usage="Unique cultural showcase with distinctive Australian character. <span class='tooltip-keyboard'>G'day mate!</span>">🇦🇺 Outback Town</button>
             <button class="tool-btn" onclick="populateMonsters()">👹 Add Monsters</button>
             <button class="tool-btn" onclick="worldBuilder.exportWorldWithEntryPoints()">🚪 Export with Doors</button>
             <button class="tool-btn" onclick="worldBuilder.toggleTestMode()" id="testModeBtn">🎮 Test Mode</button>
             <button class="tool-btn" onclick="gameCommands.manualSave()" id="debugSaveBtn">🔧 Debug Save</button>
-            <button class="tool-btn" onclick="showPlayerImageGenerator()" id="imageGenBtn">🎨 Player Image</button>
-            <button class="tool-btn" onclick="toggleClaudeTerminal()" id="claudeTerminalBtn">💻 Claude Terminal</button>
+            <button class="tool-btn" onclick="showPlayerImageGenerator()" id="imageGenBtn" 
+                data-tooltip-title="AI Image Generator" 
+                data-tooltip-category="Content Creation"
+                data-tooltip-description="Generate custom images using OpenAI's DALL-E. Create unique player avatars, monsters, or items."
+                data-tooltip-stats="AI Model|DALL-E|Resolution|1024x1024|Format|PNG|Quality|High"
+                data-tooltip-usage="Enter a detailed prompt and generate custom images. <span class='tooltip-keyboard'>Perfect for unique content!</span>">🎨 Player Image</button>
+            <button class="tool-btn" onclick="toggleClaudeTerminal()" id="claudeTerminalBtn" 
+                data-tooltip-title="Claude AI Terminal" 
+                data-tooltip-category="AI Assistant"
+                data-tooltip-description="Interactive AI terminal for creating monsters, NPCs, buildings, and more using natural language."
+                data-tooltip-stats="AI Model|GPT-3.5-turbo|Features|Content Creation|Image Gen|DALL-E"
+                data-tooltip-usage="Type commands like 'create a fire dragon' or 'add a blacksmith NPC'. <span class='tooltip-keyboard'>AI powered!</span>">💻 Claude Terminal</button>
         </div>
         
         <div class="tool-group">
@@ -399,21 +608,66 @@
         <div class="tile-category">
             <h3>🌍 Terrain</h3>
             <div class="tile-grid">
-                <div class="tile-btn selected" data-type="grass" data-name="Grass" style="background: #228B22;">🌱</div>
-                <div class="tile-btn" data-type="dirt" data-name="Dirt" style="background: linear-gradient(135deg, #8B4513, #A0522D, #CD853F);">🟫</div>
-                <div class="tile-btn" data-type="stone" data-name="Stone" style="background: linear-gradient(135deg, #696969, #808080, #A9A9A9);">🪨</div>
-                <div class="tile-btn" data-type="cobblestone" data-name="Cobble" style="background: #A0A0A0;">🧱</div>
-                <div class="tile-btn" data-type="water" data-name="Water" style="background: linear-gradient(135deg, #4169E1, #1E90FF, #87CEEB);">🌊</div>
-                <div class="tile-btn" data-type="sand" data-name="Sand" style="background: linear-gradient(135deg, #F4A460, #DEB887, #D2B48C);">🏖️</div>
-                <div class="tile-btn" data-type="mud" data-name="Mud" style="background: linear-gradient(135deg, #8B4513, #654321, #5D4037);">💩</div>
-                <div class="tile-btn" data-type="snow" data-name="Snow" style="background: linear-gradient(45deg, #F0F8FF, #E6F3FF); border: 1px solid #B0E0E6;">🌨️</div>
+                <div class="tile-btn selected" data-type="grass" data-name="Grass" style="background: #228B22;" 
+                    data-tooltip-title="Grass Terrain" 
+                    data-tooltip-category="Terrain"
+                    data-tooltip-description="Standard grass terrain for outdoor areas. Forms the base layer for most worlds."
+                    data-tooltip-stats="Walkable|Yes|Tileable|Yes|Variants|10|Biome|Temperate"
+                    data-tooltip-usage="Perfect for fields, meadows, and general outdoor areas. <span class='tooltip-keyboard'>Click</span> to place grass tiles.">🌱</div>
+                <div class="tile-btn" data-type="dirt" data-name="Dirt" style="background: linear-gradient(135deg, #8B4513, #A0522D, #CD853F);" 
+                    data-tooltip-title="Dirt Path" 
+                    data-tooltip-category="Terrain"
+                    data-tooltip-description="Earthy terrain for paths, roads, and cleared areas. Great for connecting different zones."
+                    data-tooltip-stats="Walkable|Yes|Tileable|Yes|Variants|10|Biome|Universal"
+                    data-tooltip-usage="Use for roads, paths, and cleared areas. Blends well with most terrain types.">🟫</div>
+                <div class="tile-btn" data-type="stone" data-name="Stone" style="background: linear-gradient(135deg, #696969, #808080, #A9A9A9);" 
+                    data-tooltip-title="Stone Floor" 
+                    data-tooltip-category="Terrain"
+                    data-tooltip-description="Durable stone flooring for buildings, dungeons, and fortified areas."
+                    data-tooltip-stats="Walkable|Yes|Tileable|Yes|Variants|10|Durability|High"
+                    data-tooltip-usage="Perfect for castle floors, dungeon passages, and stone structures. Very durable.">⛰️</div>
+                <div class="tile-btn" data-type="cobblestone" data-name="Cobble" style="background: #A0A0A0;" 
+                    data-tooltip-title="Cobblestone Path" 
+                    data-tooltip-category="Terrain"
+                    data-tooltip-description="Medieval-style cobblestone for roads, courtyards, and town squares."
+                    data-tooltip-stats="Walkable|Yes|Tileable|Yes|Variants|10|Style|Medieval"
+                    data-tooltip-usage="Great for town centers, castle courtyards, and main roads. Classic medieval look.">🧱</div>
+                <div class="tile-btn" data-type="water" data-name="Water" style="background: linear-gradient(135deg, #4169E1, #1E90FF, #87CEEB);" 
+                    data-tooltip-title="Water Tile" 
+                    data-tooltip-category="Terrain"
+                    data-tooltip-description="Deep water for rivers, lakes, and oceans. Blocks most movement but allows fishing."
+                    data-tooltip-stats="Walkable|No|Swimmable|Yes|Fishable|Yes|Variants|10"
+                    data-tooltip-usage="Create rivers, lakes, and moats. Can be used for fishing spots and water obstacles.">🌊</div>
+                <div class="tile-btn" data-type="sand" data-name="Sand" style="background: linear-gradient(135deg, #F4A460, #DEB887, #D2B48C);" 
+                    data-tooltip-title="Sand Terrain" 
+                    data-tooltip-category="Terrain"
+                    data-tooltip-description="Desert sand for beaches, dunes, and arid regions. Slower movement speed."
+                    data-tooltip-stats="Walkable|Yes|Speed|Slow|Variants|10|Biome|Desert"
+                    data-tooltip-usage="Perfect for beaches, deserts, and sandy areas. Provides natural barriers.">🏖️</div>
+                <div class="tile-btn" data-type="mud" data-name="Mud" style="background: linear-gradient(135deg, #8B4513, #654321, #5D4037);" 
+                    data-tooltip-title="Mud Terrain" 
+                    data-tooltip-category="Terrain"
+                    data-tooltip-description="Swampy mud terrain for marshes and wet areas. Very slow movement."
+                    data-tooltip-stats="Walkable|Yes|Speed|Very Slow|Variants|10|Biome|Swamp"
+                    data-tooltip-usage="Use for swamps, marshes, and muddy areas. Creates movement challenges.">💩</div>
+                <div class="tile-btn" data-type="snow" data-name="Snow" style="background: linear-gradient(45deg, #F0F8FF, #E6F3FF); border: 1px solid #B0E0E6;" 
+                    data-tooltip-title="Snow Terrain" 
+                    data-tooltip-category="Terrain"
+                    data-tooltip-description="Frozen snow for winter landscapes and arctic regions. Slippery surface."
+                    data-tooltip-stats="Walkable|Yes|Speed|Normal|Variants|10|Biome|Arctic"
+                    data-tooltip-usage="Create winter scenes, mountain peaks, and frozen landscapes.">🌨️</div>
             </div>
         </div>
         
         <div class="tile-category">
             <h3>🏦 Banks & Shops</h3>
             <div class="tile-grid">
-                <div class="tile-btn" data-type="bank" data-name="Bank" style="background: #FFD700;">🏦</div>
+                <div class="tile-btn" data-type="bank" data-name="Bank" style="background: #FFD700;" 
+                    data-tooltip-title="Bank Building" 
+                    data-tooltip-category="Financial"
+                    data-tooltip-description="Central banking facility for storing items and gold. Essential for any town."
+                    data-tooltip-stats="Capacity|Unlimited|Security|Maximum|Access|Public|Services|Storage"
+                    data-tooltip-usage="Place near town centers. Players can store items, gold, and access their bank account here.">🏦</div>
                 <div class="tile-btn" data-type="general_store" data-name="General" style="background: #8B4513;">🏪</div>
                 <div class="tile-btn" data-type="magic_shop" data-name="Magic" style="background: #9932CC;">🔮</div>
                 <div class="tile-btn" data-type="weapon_shop" data-name="Weapons" style="background: #CD853F;">⚔️</div>
@@ -429,7 +683,12 @@
             <div class="tile-grid">
                 <div class="tile-btn" data-type="house_small" data-name="House" style="background: #D2B48C;">🏠</div>
                 <div class="tile-btn" data-type="house_large" data-name="Manor" style="background: #CD853F;">🏘️</div>
-                <div class="tile-btn" data-type="castle" data-name="Castle" style="background: #696969;">🏰</div>
+                <div class="tile-btn" data-type="castle" data-name="Castle" style="background: #696969;" 
+                    data-tooltip-title="Royal Castle" 
+                    data-tooltip-category="Building"
+                    data-tooltip-description="Massive fortress serving as royal residence and military stronghold."
+                    data-tooltip-stats="Size|Large|Defense|Maximum|Occupancy|50+|Type|Fortress"
+                    data-tooltip-usage="Perfect centerpiece for kingdoms. Houses nobility, guards, and important NPCs.">🏰</div>
                 <div class="tile-btn" data-type="tower_wizard" data-name="Wizard Tower" style="background: #9932CC;">🗼</div>
                 <div class="tile-btn" data-type="church" data-name="Church" style="background: #F5DEB3;">⛪</div>
                 <div class="tile-btn" data-type="inn" data-name="Inn" style="background: #8B4513;">🍺</div>
@@ -442,7 +701,12 @@
             <h3>🌳 Trees</h3>
             <div class="tile-grid">
                 <div class="tile-btn" data-type="tree_normal" data-name="Normal Tree" style="background: #228B22;">🌳</div>
-                <div class="tile-btn" data-type="tree_oak" data-name="Oak Tree" style="background: #8FBC8F;">🌳</div>
+                <div class="tile-btn" data-type="tree_oak" data-name="Oak Tree" style="background: #8FBC8F;" 
+                    data-tooltip-title="Oak Tree" 
+                    data-tooltip-category="Resource"
+                    data-tooltip-description="Sturdy oak tree providing high-quality logs. Excellent for woodcutting training."
+                    data-tooltip-stats="Resource|Oak Logs|Skill Level|15|Experience|37.5|Respawn|30s"
+                    data-tooltip-usage="Essential woodcutting resource. Place in forests and near lumber mills.">🌳</div>
                 <div class="tile-btn" data-type="tree_willow" data-name="Willow Tree" style="background: #90EE90;">🌿</div>
                 <div class="tile-btn" data-type="tree_maple" data-name="Maple Tree" style="background: #FF6347;">🍁</div>
                 <div class="tile-btn" data-type="tree_yew" data-name="Yew Tree" style="background: #2F4F4F;">🌲</div>
@@ -457,7 +721,12 @@
             <div class="tile-grid">
                 <div class="tile-btn" data-type="rock_copper" data-name="Copper" style="background: #CD853F;">🪨</div>
                 <div class="tile-btn" data-type="rock_tin" data-name="Tin" style="background: #C0C0C0;">🪨</div>
-                <div class="tile-btn" data-type="rock_iron" data-name="Iron" style="background: #A0A0A0;">🪨</div>
+                <div class="tile-btn" data-type="rock_iron" data-name="Iron" style="background: #A0A0A0;" 
+                    data-tooltip-title="Iron Ore Rock" 
+                    data-tooltip-category="Resource"
+                    data-tooltip-description="Common iron ore deposit. Essential for smithing weapons and armor."
+                    data-tooltip-stats="Resource|Iron Ore|Skill Level|15|Experience|35|Respawn|5.4s"
+                    data-tooltip-usage="Key mining resource for mid-level players. Place near mining areas and forges.">🪨</div>
                 <div class="tile-btn" data-type="rock_coal" data-name="Coal" style="background: #2F2F2F;">⚫</div>
                 <div class="tile-btn" data-type="rock_gold" data-name="Gold" style="background: #FFD700;">🟡</div>
                 <div class="tile-btn" data-type="rock_mithril" data-name="Mithril" style="background: #4169E1;">🔵</div>
@@ -469,8 +738,18 @@
         <div class="tile-category">
             <h3>🎣 Skills</h3>
             <div class="tile-grid">
-                <div class="tile-btn" data-type="fishing_spot" data-name="Fishing" style="background: #4169E1;">🎣</div>
-                <div class="tile-btn" data-type="furnace" data-name="Furnace" style="background: #FF4500;">🔥</div>
+                <div class="tile-btn" data-type="fishing_spot" data-name="Fishing" style="background: #4169E1;" 
+                    data-tooltip-title="Fishing Spot" 
+                    data-tooltip-category="Resource Location"
+                    data-tooltip-description="Abundant fishing location with various fish species. Requires fishing rod."
+                    data-tooltip-stats="Skill|Fishing|Fish Types|5+|Experience|Variable|Tools|Rod, Net, Harpoon"
+                    data-tooltip-usage="Must be placed adjacent to water tiles. Different spots yield different fish types.">🎣</div>
+                <div class="tile-btn" data-type="furnace" data-name="Furnace" style="background: #FF4500;" 
+                    data-tooltip-title="Smithing Furnace" 
+                    data-tooltip-category="Skill Station"
+                    data-tooltip-description="High-temperature furnace for smelting ores into bars. Essential smithing equipment."
+                    data-tooltip-stats="Skill|Smithing|Function|Smelting|Heat Level|Maximum|Fuel|Coal"
+                    data-tooltip-usage="Place near mining areas and anvils. Players use this to smelt ores into usable bars.">🔥</div>
                 <div class="tile-btn" data-type="anvil" data-name="Anvil" style="background: #2F2F2F;">⚒️</div>
                 <div class="tile-btn" data-type="altar" data-name="Altar" style="background: #9932CC;">⛩️</div>
                 <div class="tile-btn" data-type="spinning_wheel" data-name="Spinning" style="background: #DEB887;">🎡</div>
@@ -484,7 +763,12 @@
             <h3>👹 Low Level Monsters</h3>
             <div class="tile-grid">
                 <div class="tile-btn" data-type="monster_rat" data-name="Giant Rat" style="background: #8B4513;">🐀</div>
-                <div class="tile-btn" data-type="monster_goblin" data-name="Goblin" style="background: #8B0000;">👹</div>
+                <div class="tile-btn" data-type="monster_goblin" data-name="Goblin" style="background: #8B0000;" 
+                    data-tooltip-title="Goblin" 
+                    data-tooltip-category="Low Level Monster"
+                    data-tooltip-description="Weak but aggressive humanoid creature. Perfect for new players to practice combat."
+                    data-tooltip-stats="Combat Level|2|Hitpoints|15|Max Hit|2|Drops|Bones, Coins"
+                    data-tooltip-usage="Great starter monster for combat training. Place in groups for realistic encounters.">👹</div>
                 <div class="tile-btn" data-type="monster_imp" data-name="Imp" style="background: #8B008B;">👺</div>
                 <div class="tile-btn" data-type="monster_spider" data-name="Giant Spider" style="background: #2F2F2F;">🕷️</div>
                 <div class="tile-btn" data-type="monster_chicken" data-name="Chicken" style="background: #FFFF00;">🐔</div>
@@ -511,7 +795,12 @@
         <div class="tile-category">
             <h3>🐉 High Level Monsters</h3>
             <div class="tile-grid">
-                <div class="tile-btn" data-type="monster_dragon_green" data-name="Green Dragon" style="background: #228B22;">🐉</div>
+                <div class="tile-btn" data-type="monster_dragon_green" data-name="Green Dragon" style="background: #228B22;" 
+                    data-tooltip-title="Green Dragon" 
+                    data-tooltip-category="High Level Monster"
+                    data-tooltip-description="Powerful dragon with deadly dragonfire breath. High-level combat challenge."
+                    data-tooltip-stats="Combat Level|79|Hitpoints|500|Max Hit|50|Drops|Dragon Bones, Hide"
+                    data-tooltip-usage="Dangerous high-level monster. Place in remote areas with sufficient space for combat.">🐉</div>
                 <div class="tile-btn" data-type="monster_dragon_red" data-name="Red Dragon" style="background: #DC143C;">🐲</div>
                 <div class="tile-btn" data-type="monster_dragon_black" data-name="Black Dragon" style="background: #2F2F2F;">🖤</div>
                 <div class="tile-btn" data-type="monster_demon" data-name="Demon" style="background: #8B0000;">😈</div>
@@ -632,6 +921,65 @@
                 <div class="tile-btn" data-type="statue" data-name="Statue" style="background: #D3D3D3;">🗿</div>
                 <div class="tile-btn" data-type="bridge" data-name="Bridge" style="background: #8B4513;">🌉</div>
             </div>
+        </div>
+        
+        <!-- Custom Content Section -->
+        <div class="custom-content-section">
+            <h3>🎮 Custom Content</h3>
+            <button class="custom-refresh-btn" onclick="refreshCustomContent()" 
+                data-tooltip-title="Refresh Custom Content" 
+                data-tooltip-category="Content Management"
+                data-tooltip-description="Reload all custom monsters, NPCs, buildings, objects, and quests from the database."
+                data-tooltip-stats="Source|Database|Update|Live|Cache|Cleared"
+                data-tooltip-usage="Use after creating new content via Claude Terminal to see updates immediately.">🔄 Refresh</button>
+        </div>
+        
+        <div class="custom-content-section">
+            <h3>👹 Custom Monsters</h3>
+            <div id="customMonsters">
+                <div class="empty-state">No custom monsters yet.<br>Use Claude Terminal!</div>
+            </div>
+        </div>
+        
+        <div class="custom-content-section">
+            <h3>👤 Custom NPCs</h3>
+            <div id="customNPCs">
+                <div class="empty-state">No custom NPCs yet.<br>Use Claude Terminal!</div>
+            </div>
+        </div>
+        
+        <div class="custom-content-section">
+            <h3>🏠 Custom Buildings</h3>
+            <div id="customBuildings">
+                <div class="empty-state">No custom buildings yet.<br>Use Claude Terminal!</div>
+            </div>
+        </div>
+        
+        <div class="custom-content-section">
+            <h3>📦 Custom Objects</h3>
+            <div id="customObjects">
+                <div class="empty-state">No custom objects yet.<br>Use Claude Terminal!</div>
+            </div>
+        </div>
+        
+        <div class="custom-content-section">
+            <h3>📜 Custom Quests</h3>
+            <div id="customQuests">
+                <div class="empty-state">No custom quests yet.<br>Use Claude Terminal!</div>
+            </div>
+        </div>
+        
+        <div class="custom-content-section">
+            <h3>🗺️ Saved Worlds</h3>
+            <div id="savedWorlds">
+                <div class="empty-state">Loading...</div>
+            </div>
+        </div>
+        
+        <div class="custom-content-section">
+            <h3>🎯 Quick Actions</h3>
+            <button class="custom-refresh-btn" onclick="openClaudeTerminal()" style="background: linear-gradient(45deg, #4CAF50, #45a049);">💬 Claude Terminal</button>
+            <button class="custom-refresh-btn" onclick="openAdmin()" style="background: linear-gradient(45deg, #e74c3c, #c0392b);">⚙️ Admin Panel</button>
         </div>
     </div>
     
@@ -809,20 +1157,29 @@
         </div>
     </div>
     
+    
     <div class="coords">
         Position: <span id="coordsDisplay">0, 0</span> | Tile: <span id="selectedType">grass</span>
     </div>
     
     <div class="save-load">
-        <button onclick="saveWorld()">💾 Save World</button>
-        <button onclick="loadWorld()">📁 Load World</button>
+        <button onclick="saveWorld()" 
+            data-tooltip-title="Save World" 
+            data-tooltip-category="World Management"
+            data-tooltip-description="Save your current world design to the database with a custom name."
+            data-tooltip-stats="Storage|Database|Format|SQLite|Backup|Automatic"
+            data-tooltip-usage="Enter a name for your world and save it permanently. Can be loaded anytime later.">💾 Save World</button>
+        <button onclick="loadWorld()" 
+            data-tooltip-title="Load World" 
+            data-tooltip-category="World Management"
+            data-tooltip-description="Browse and load previously saved worlds from your collection."
+            data-tooltip-stats="Source|Database|Preview|Available|Import|Instant"
+            data-tooltip-usage="Select from your saved worlds list. Current work will be replaced with loaded world.">📁 Load World</button>
         <button onclick="gameCommands.manualSave()" style="background: linear-gradient(to bottom, #FF6347, #DC143C);">🚨 Test Save</button>
+        <button onclick="exportToGame()" style="background: linear-gradient(45deg, #4CAF50, #45a049);">🎮 Export to Game</button>
         <input type="file" id="fileInput" style="display: none;" accept=".json">
     </div>
     
-    <div class="status-bar">
-        🏰 RuneScape World Builder | <span id="testModeIndicator" style="color: #FFD700;">BUILD MODE</span> | Tiles Placed: <span id="tilesPlaced">0</span>
-    </div>
     
     <!-- Claude Terminal -->
     <div id="claudeTerminal" class="claude-terminal">
@@ -1454,6 +1811,10 @@ Please start your response with: console.log('📥 MESSAGE RECEIVED BY CLAUDE:',
             
             // If socket.io is available, listen for updates
             if (typeof socket !== 'undefined' && socket) {
+                // Remove any existing listeners to prevent duplicates
+                socket.off('claudeUpdate');
+                socket.off('autoRefresh');
+                
                 // Listen for Claude updates
                 socket.on('claudeUpdate', (data) => {
                     addTerminalMessage(data.type, data.status);
@@ -1467,7 +1828,13 @@ Please start your response with: console.log('📥 MESSAGE RECEIVED BY CLAUDE:',
                 socket.on('autoRefresh', (data) => {
                     addTerminalMessage('success', `🔄 Changes applied! Auto-refreshing... (${data.reason})`);
                     setTimeout(() => {
-                        location.reload();
+                        // Only refresh custom content instead of full page reload
+                        if (typeof refreshCustomContent === 'function') {
+                            refreshCustomContent();
+                            addTerminalMessage('success', '✅ Custom content refreshed!');
+                        } else {
+                            location.reload();
+                        }
                     }, 2000);
                 });
                 
@@ -1518,6 +1885,137 @@ ${Object.entries(tileCounts).sort(([,a], [,b]) => b - a).slice(0, 5).map(([type,
             
             return context;
         }
+
+        // ============================================
+        // 🎯 TOOLTIP SYSTEM
+        // ============================================
+        
+        let tooltipElement = null;
+        
+        function initializeTooltipSystem() {
+            // Create tooltip element
+            tooltipElement = document.createElement('div');
+            tooltipElement.className = 'tooltip';
+            tooltipElement.id = 'gameTooltip';
+            document.body.appendChild(tooltipElement);
+            
+            // Add event listeners to all elements with tooltip data
+            const elementsWithTooltips = document.querySelectorAll('[data-tooltip-title]');
+            
+            elementsWithTooltips.forEach(element => {
+                element.addEventListener('mouseenter', showTooltip);
+                element.addEventListener('mouseleave', hideTooltip);
+                element.addEventListener('mousemove', updateTooltipPosition);
+            });
+            
+            console.log(`🎯 Initialized tooltip system for ${elementsWithTooltips.length} elements`);
+        }
+        
+        function showTooltip(event) {
+            const element = event.target;
+            
+            // Extract tooltip data
+            const title = element.dataset.tooltipTitle;
+            const category = element.dataset.tooltipCategory;
+            const description = element.dataset.tooltipDescription;
+            const stats = element.dataset.tooltipStats;
+            const usage = element.dataset.tooltipUsage;
+            const variants = element.dataset.tooltipVariants;
+            
+            if (!title) return;
+            
+            // Build tooltip content
+            let content = `
+                <div class="tooltip-title">${title}</div>
+                <div class="tooltip-category">${category}</div>
+                <div class="tooltip-description">${description}</div>
+            `;
+            
+            // Add stats if available
+            if (stats) {
+                content += '<div class="tooltip-stats"><div class="tooltip-stats-title">📊 Stats</div>';
+                const statPairs = stats.split('|');
+                for (let i = 0; i < statPairs.length; i += 2) {
+                    if (statPairs[i] && statPairs[i + 1]) {
+                        content += `
+                            <div class="tooltip-stat">
+                                <span class="tooltip-stat-label">${statPairs[i]}:</span>
+                                <span class="tooltip-stat-value">${statPairs[i + 1]}</span>
+                            </div>
+                        `;
+                    }
+                }
+                content += '</div>';
+            }
+            
+            // Add variants if available
+            if (variants) {
+                content += `
+                    <div class="tooltip-variants">
+                        <div class="tooltip-variants-title">🎨 Variants</div>
+                        <div>${variants}</div>
+                    </div>
+                `;
+            }
+            
+            // Add usage if available
+            if (usage) {
+                content += `
+                    <div class="tooltip-usage">
+                        <div class="tooltip-usage-title">💡 Usage</div>
+                        <div>${usage}</div>
+                    </div>
+                `;
+            }
+            
+            // Set tooltip content and show
+            tooltipElement.innerHTML = content;
+            tooltipElement.classList.add('show');
+            
+            // Position tooltip
+            updateTooltipPosition(event);
+        }
+        
+        function hideTooltip() {
+            if (tooltipElement) {
+                tooltipElement.classList.remove('show');
+            }
+        }
+        
+        function updateTooltipPosition(event) {
+            if (!tooltipElement || !tooltipElement.classList.contains('show')) return;
+            
+            const mouseX = event.clientX;
+            const mouseY = event.clientY;
+            const tooltipRect = tooltipElement.getBoundingClientRect();
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            
+            let left = mouseX + 15;
+            let top = mouseY + 15;
+            
+            // Adjust if tooltip would go off screen
+            if (left + tooltipRect.width > windowWidth) {
+                left = mouseX - tooltipRect.width - 15;
+            }
+            
+            if (top + tooltipRect.height > windowHeight) {
+                top = mouseY - tooltipRect.height - 15;
+            }
+            
+            // Ensure tooltip doesn't go off screen on left/top
+            left = Math.max(10, left);
+            top = Math.max(10, top);
+            
+            tooltipElement.style.left = left + 'px';
+            tooltipElement.style.top = top + 'px';
+        }
+        
+        // Initialize tooltip system when page loads
+        document.addEventListener('DOMContentLoaded', initializeTooltipSystem);
+        
+        // Also initialize after a short delay to catch any dynamically loaded content
+        setTimeout(initializeTooltipSystem, 1000);
     </script>
 </body>
 </html>

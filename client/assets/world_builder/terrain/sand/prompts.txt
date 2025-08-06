@@ -1,0 +1,31 @@
+SAND TILE PROMPTS - 10 Style Variations
+
+1. Moroccan Style (Country):
+"Sahara desert sand texture, golden dunes pattern, camel footprints visible, North African style, 16x16 pixel art, hot desert game tile"
+
+2. Thai Style (Country):
+"Thai beach sand texture, white pristine sand, seashell fragments, tropical paradise style, 16x16 pixel art, Southeast Asian coastal tile"
+
+3. Arabian Style (Country):
+"Arabian desert sand, shifting dune patterns, magic carpet marks, Middle Eastern aesthetic, 16x16 pixel art, mystical desert tile"
+
+4. Journey Style (Game):
+"Journey game sand texture, artistic flowing patterns, golden magical particles, indie game aesthetic, 16x16 pixel art, meditative desert tile"
+
+5. Minecraft Desert Style (Game):
+"Blocky desert sand texture, simple yellow pixels, cactus shadows, sandbox game style, 16x16 pixel art, cubic world sand tile"
+
+6. Lawrence of Arabia Style (Movie):
+"Epic desert sand texture, windswept ridges, classic cinema aesthetic, vast emptiness feel, 16x16 pixel art, historical epic tile"
+
+7. Dune (2021) Style (Movie):
+"Arrakis sand texture, spice particles glowing, sci-fi desert with worm trails, Villeneuve aesthetic, 16x16 pixel art, epic scale sand tile"
+
+8. Aladdin Style (Movie):
+"Agrabah marketplace sand, golden with carpet fibers, Disney Arabian aesthetic, 16x16 pixel art, magical desert tile"
+
+9. Breaking Bad Desert Style (TV):
+"New Mexico sand texture, meth cooking residue, stark and desolate, AMC drama style, 16x16 pixel art, crime drama desert tile"
+
+10. Westworld Style (TV):
+"Western frontier sand, bootprints and bullet casings, HBO sci-fi western, 16x16 pixel art, artificial desert tile"

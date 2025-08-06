@@ -1,9 +1,28 @@
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '../.env') });
+const dotenv = require('dotenv');
+
+// Clear any existing OPENAI_API_KEY from system environment
+if (process.env.OPENAI_API_KEY) {
+    console.log('⚠️ Clearing existing system OPENAI_API_KEY to use .env file');
+    delete process.env.OPENAI_API_KEY;
+}
+
+// Load environment variables
+const envPath = path.join(__dirname, '../.env');
+const result = dotenv.config({ path: envPath, override: true });
+
+if (result.error) {
+    console.warn('⚠️ Could not load .env file:', result.error.message);
+} else {
+    console.log(`✅ Loaded ${Object.keys(result.parsed || {}).length} environment variables from .env`);
+    console.log(`🔑 Using API key: ${process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 15) + '...' : 'NOT SET'}`);
+}
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const { v4: uuidv4 } = require('uuid');
+const database = require('./database');
+const AIGameMaster = require('./ai-gamemaster');
 
 const app = express();
 const server = http.createServer(app);
@@ -17,6 +36,12 @@ const players = new Map();
 const users = new Map();
 const npcs = new Map();
 const shops = new Map();
+
+// Initialize AI Game Master
+let aiGameMaster = null;
+
+// Global world data for terrain checking
+let currentWorldData = null;
 
 // PvP Areas - Define zones where players can attack each other
 const pvpAreas = [
@@ -240,8 +265,62 @@ function handlePlayerDeath(victim, killer) {
     });
 }
 
+// Check if terrain is suitable for monster spawning
+function isValidMonsterTerrain(terrain) {
+    const validTerrains = ['grass', 'dirt', 'mud', 'stone', 'sand', 'cobblestone'];
+    const invalidTerrains = ['water', 'lava', 'ice'];
+    
+    // Explicitly reject water and other liquid terrains
+    if (invalidTerrains.includes(terrain)) {
+        return false;
+    }
+    
+    // Accept most solid ground terrains
+    if (validTerrains.includes(terrain)) {
+        return true;
+    }
+    
+    // For unknown terrain types, default to allowing spawning (conservative approach)
+    // but log it for debugging
+    if (terrain && terrain !== 'grass') {
+        console.log(`🤔 Unknown terrain type for monster spawning: ${terrain} - allowing`);
+    }
+    
+    return true;
+}
+
 // Get terrain type at a specific position (matches client logic)
 function getTerrainAt(x, y) {
+    // Check if we have custom world data loaded
+    if (currentWorldData && currentWorldData.tiles) {
+        const tileSize = currentWorldData.tileSize || 32;
+        const tileX = Math.floor(x / tileSize);
+        const tileY = Math.floor(y / tileSize);
+        
+        // Handle both 2D array format (from world builder) and object format
+        if (Array.isArray(currentWorldData.tiles)) {
+            // 2D array format: tiles[y][x]
+            if (tileY >= 0 && tileY < currentWorldData.tiles.length && 
+                tileX >= 0 && tileX < currentWorldData.tiles[tileY].length) {
+                const customTile = currentWorldData.tiles[tileY][tileX];
+                if (customTile && customTile.type) {
+                    return customTile.type;
+                }
+            }
+        } else {
+            // Object format: tiles["x,y"] (legacy)
+            const tileKey = `${tileX},${tileY}`;
+            const customTile = currentWorldData.tiles[tileKey];
+            if (customTile && customTile.type) {
+                return customTile.type;
+            }
+        }
+        
+        // Default to grass if no tile data found
+        return 'grass';
+    }
+    
+    // Default world terrain generation (original logic)
     const tileSize = 32;
     const tileX = Math.floor(x / tileSize);
     const tileY = Math.floor(y / tileSize);
@@ -296,8 +375,8 @@ function initializeNPCs() {
         const y = Math.random() * 2000;
         const terrain = getTerrainAt(x, y);
         
-        // Goblins spawn on grass, dirt, or mud (not water, sand, stone, or paths)
-        if (terrain === 'grass' || terrain === 'dirt' || terrain === 'mud') {
+        // Enhanced terrain validation for monster spawning
+        if (isValidMonsterTerrain(terrain)) {
             const npc = {
                 id: `goblin_${goblinCount}`,
                 type: 'goblin',
@@ -625,7 +704,7 @@ function updateNPCs() {
                     newX = Math.max(50, Math.min(1950, npc.x + (Math.random() - 0.5) * 400));
                     newY = Math.max(50, Math.min(1950, npc.y + (Math.random() - 0.5) * 400));
                     const terrain = getTerrainAt(newX, newY);
-                    validTerrain = (terrain === 'grass' || terrain === 'dirt' || terrain === 'mud');
+                    validTerrain = isValidMonsterTerrain(terrain);
                     wanderAttempts++;
                 } while (!validTerrain && wanderAttempts < 10);
                 
@@ -744,6 +823,14 @@ io.on('connection', (socket) => {
                 y: player.y
             });
             
+            // Track player movement for AI Game Master
+            if (aiGameMaster) {
+                aiGameMaster.trackPlayerAction(player.id, 'move', {
+                    location: { x: player.x, y: player.y },
+                    level: player.level
+                });
+            }
+            
             const user = users.get(player.username);
             if (user) {
                 user.playerData.x = player.x;
@@ -761,6 +848,15 @@ io.on('connection', (socket) => {
                 username: player.username,
                 message: message.trim()
             });
+            
+            // Track chat for AI Game Master
+            if (aiGameMaster) {
+                aiGameMaster.trackPlayerAction(player.id, 'chat', {
+                    message: message.trim(),
+                    location: { x: player.x, y: player.y },
+                    level: player.level
+                });
+            }
         }
     });
 
@@ -813,9 +909,28 @@ io.on('connection', (socket) => {
             npc.isInCombat = true;
             npc.target = player.id;
             
+            // Track combat action for AI Game Master
+            if (aiGameMaster) {
+                aiGameMaster.trackPlayerAction(player.id, 'attack_monster', {
+                    monster: npc.type,
+                    damage: damage,
+                    location: { x: player.x, y: player.y },
+                    level: player.level
+                });
+            }
+            
             if (npc.hp <= 0) {
                 // NPC died
                 npc.deathTime = Date.now();
+                
+                // Track monster kill for AI Game Master
+                if (aiGameMaster) {
+                    aiGameMaster.trackPlayerAction(player.id, 'kill_monster', {
+                        monster: npc.type,
+                        location: { x: player.x, y: player.y },
+                        level: player.level
+                    });
+                }
                 
                 socket.emit('chatMessage', {
                     username: 'Combat', 
@@ -1117,6 +1232,15 @@ io.on('connection', (socket) => {
         
         if (attacker && target && target.stats.hp > 0) {
             handlePlayerAttack(attacker, target, socket);
+            
+            // Track PVP combat for AI Game Master
+            if (aiGameMaster) {
+                aiGameMaster.trackPlayerAction(attacker.id, 'pvp_combat', {
+                    target: target.username,
+                    location: { x: attacker.x, y: attacker.y },
+                    level: attacker.level
+                });
+            }
             
             // Update inventories for both players
             socket.emit('inventoryUpdate', { inventory: attacker.inventory });
@@ -1975,10 +2099,13 @@ async function processClaudeMessage(message) {
         // Use AI to understand the command
         let aiProcessed = false;
         try {
+            console.log(`🤖 Attempting AI processing for: "${message.command}"`);
             const { understandCommand, executeAICommand } = require('./ai-interpreter');
             const understanding = await understandCommand(message.command);
             
-            if (understanding) {
+            console.log('🧠 AI Understanding result:', understanding);
+            
+            if (understanding && understanding.action !== 'unknown') {
                 const action = await executeAICommand(understanding, message.command);
                 
                 if (action.type === 'icon_update') {
@@ -2019,6 +2146,18 @@ async function processClaudeMessage(message) {
                         secondaryColor: action.monster.secondaryColor
                     };
                     
+                    // Generate image with OpenAI
+                    sendUpdate('🎨 Generating monster image...', 'system');
+                    const imageUrl = await generateMonsterImage(monster.name);
+                    if (imageUrl) {
+                        monster.imageUrl = imageUrl;
+                        sendUpdate(`✅ Image generated successfully!`, 'system');
+                    }
+                    await delay(1000);
+                    
+                    // Save monster to database
+                    await database.saveMonster(monster);
+                    
                     await addMonsterToGame(monster);
                     
                     sendUpdate(`📊 Stats: Level ${monster.level}, HP: ${monster.hp}, Color: ${monster.color}`, 'system');
@@ -2027,6 +2166,388 @@ async function processClaudeMessage(message) {
                     sendUpdate(`✅ ${monster.displayName} created! Check the game world!`, 'success');
                     io.emit('monsterCreated', monster);
                     io.emit('autoRefresh', { reason: `New monster: ${monster.displayName}` });
+                    aiProcessed = true;
+                    
+                } else if (action.type === 'npc_creation') {
+                    sendUpdate(`👤 Creating NPC: ${action.npc.name}`, 'system');
+                    await delay(1000);
+                    
+                    sendUpdate('🎭 AI generated personality...', 'system');
+                    await delay(1500);
+                    
+                    // Create NPC with AI-generated data
+                    const npc = {
+                        name: action.npc.name,
+                        displayName: action.npc.name,
+                        type: action.npc.type,
+                        level: action.npc.level,
+                        hp: action.npc.hp,
+                        maxHp: action.npc.hp,
+                        color: action.npc.color,
+                        dialogue: action.npc.dialogue,
+                        shopInventory: action.npc.shopInventory,
+                        isShopkeeper: action.npc.isShopkeeper,
+                        friendly: action.npc.friendly,
+                        description: `A ${action.npc.type} named ${action.npc.name}.`
+                    };
+                    
+                    // Generate image with OpenAI
+                    sendUpdate('🎨 Generating NPC image...', 'system');
+                    const { generateImage } = require('./openai-config');
+                    const npcImageUrl = await generateImage('npc', npc.name, `${npc.type} character`);
+                    if (npcImageUrl) {
+                        npc.imageUrl = npcImageUrl;
+                        sendUpdate(`✅ Image generated successfully!`, 'system');
+                    }
+                    await delay(1000);
+                    
+                    // Save NPC to database
+                    await database.saveNPC(npc);
+                    
+                    await addNPCToGame(npc);
+                    
+                    if (npc.isShopkeeper) {
+                        sendUpdate(`🏪 Shop inventory: ${npc.shopInventory.map(item => item.name).join(', ')}`, 'system');
+                        await delay(1000);
+                    }
+                    
+                    sendUpdate(`💬 Dialogue: "${npc.dialogue}"`, 'system');
+                    await delay(1000);
+                    
+                    sendUpdate(`✅ ${npc.displayName} created! Visit them in the game world!`, 'success');
+                    io.emit('npcCreated', npc);
+                    io.emit('autoRefresh', { reason: `New NPC: ${npc.displayName}` });
+                    aiProcessed = true;
+                    
+                } else if (action.type === 'building_creation') {
+                    sendUpdate(`🏠 Creating building: ${action.building.name}`, 'system');
+                    await delay(1000);
+                    
+                    sendUpdate('🔨 AI generated blueprint...', 'system');
+                    await delay(1500);
+                    
+                    // Create building with AI-generated data
+                    const building = {
+                        name: action.building.name,
+                        displayName: action.building.name,
+                        type: action.building.type,
+                        width: action.building.width,
+                        height: action.building.height,
+                        color: action.building.color,
+                        secondaryColor: action.building.secondaryColor,
+                        materials: action.building.materials,
+                        interiorItems: action.building.interiorItems,
+                        accessible: action.building.accessible,
+                        description: action.building.description
+                    };
+                    
+                    // Generate image with OpenAI
+                    sendUpdate('🎨 Generating building image...', 'system');
+                    const { generateImage } = require('./openai-config');
+                    const imageUrl = await generateImage('building', building.name, `${building.type} made of ${building.materials.join(' and ')}`);
+                    if (imageUrl) {
+                        building.imageUrl = imageUrl;
+                        sendUpdate(`✅ Image generated successfully!`, 'system');
+                    }
+                    await delay(1000);
+                    
+                    // Save building to database
+                    await database.saveBuilding(building);
+                    
+                    sendUpdate(`📐 Dimensions: ${building.width}x${building.height} | Materials: ${building.materials.join(', ')}`, 'system');
+                    await delay(1000);
+                    
+                    sendUpdate(`✅ ${building.displayName} built! Place it in your world!`, 'success');
+                    io.emit('buildingCreated', building);
+                    io.emit('autoRefresh', { reason: `New building: ${building.displayName}` });
+                    aiProcessed = true;
+                    
+                } else if (action.type === 'object_creation') {
+                    sendUpdate(`📦 Creating object: ${action.object.name}`, 'system');
+                    await delay(1000);
+                    
+                    sendUpdate('🔧 AI generated properties...', 'system');
+                    await delay(1500);
+                    
+                    // Create object with AI-generated data
+                    const object = {
+                        name: action.object.name,
+                        displayName: action.object.name,
+                        type: action.object.type,
+                        size: action.object.size,
+                        color: action.object.color,
+                        interactionType: action.object.interactionType,
+                        durability: action.object.durability,
+                        respawnTime: action.object.respawnTime,
+                        drops: action.object.drops,
+                        description: action.object.description
+                    };
+                    
+                    // Generate image with OpenAI
+                    sendUpdate('🎨 Generating object image...', 'system');
+                    const { generateImage } = require('./openai-config');
+                    const objImageUrl = await generateImage('object', object.name, `${object.type} that can be ${object.interactionType}`);
+                    if (objImageUrl) {
+                        object.imageUrl = objImageUrl;
+                        sendUpdate(`✅ Image generated successfully!`, 'system');
+                    }
+                    await delay(1000);
+                    
+                    // Save object to database
+                    await database.saveObject(object);
+                    
+                    sendUpdate(`⚙️ Type: ${object.type} | Size: ${object.size} | Interaction: ${object.interactionType}`, 'system');
+                    if (object.drops.length > 0) {
+                        sendUpdate(`💎 Drops: ${object.drops.map(drop => drop.name).join(', ')}`, 'system');
+                    }
+                    await delay(1000);
+                    
+                    sendUpdate(`✅ ${object.displayName} created! Place it in your world!`, 'success');
+                    io.emit('objectCreated', object);
+                    io.emit('autoRefresh', { reason: `New object: ${object.displayName}` });
+                    aiProcessed = true;
+                    
+                } else if (action.type === 'quest_creation') {
+                    sendUpdate(`📜 Creating quest: ${action.quest.name}`, 'system');
+                    await delay(1000);
+                    
+                    sendUpdate('📝 AI generated quest details...', 'system');
+                    await delay(1500);
+                    
+                    // Create quest with AI-generated data
+                    const quest = {
+                        name: action.quest.name,
+                        displayName: action.quest.name,
+                        type: action.quest.type,
+                        difficulty: action.quest.difficulty,
+                        description: action.quest.description,
+                        objectives: action.quest.objectives,
+                        rewards: action.quest.rewards,
+                        requirements: action.quest.requirements,
+                        npcGiver: action.quest.npcGiver,
+                        estimatedTime: action.quest.estimatedTime,
+                        experienceReward: action.quest.experienceReward,
+                        goldReward: action.quest.goldReward
+                    };
+                    
+                    // Save quest to database
+                    await database.saveQuest(quest);
+                    
+                    sendUpdate(`🎯 Type: ${quest.type} | Difficulty: ${quest.difficulty} | Time: ${quest.estimatedTime}min`, 'system');
+                    sendUpdate(`🏆 Rewards: ${quest.experienceReward} XP, ${quest.goldReward} gold`, 'system');
+                    await delay(1000);
+                    
+                    sendUpdate(`✅ ${quest.displayName} quest created! Find the quest giver to start!`, 'success');
+                    io.emit('questCreated', quest);
+                    io.emit('autoRefresh', { reason: `New quest: ${quest.displayName}` });
+                    aiProcessed = true;
+                    
+                } else if (action.type === 'content_update') {
+                    sendUpdate(`✏️ Updating ${action.contentType}: ${action.target}`, 'system');
+                    await delay(1000);
+                    
+                    try {
+                        let result;
+                        
+                        if (action.contentType === 'npc') {
+                            result = await database.updateNPC(action.target, action.changes);
+                            
+                            if (result.success && result.updated) {
+                                sendUpdate(`✅ NPC updated: ${result.originalName} → ${result.newName}`, 'success');
+                                
+                                // List the changes made
+                                const changeList = Object.keys(action.changes).map(key => 
+                                    `${key}: ${action.changes[key]}`
+                                ).join(', ');
+                                sendUpdate(`🔧 Changes applied: ${changeList}`, 'system');
+                                
+                                io.emit('autoRefresh', { reason: `Updated NPC: ${result.newName}` });
+                            } else {
+                                sendUpdate(`⚠️ NPC "${action.target}" not found or no changes made`, 'warning');
+                            }
+                        } else {
+                            sendUpdate(`⚠️ Update not yet supported for ${action.contentType}`, 'warning');
+                        }
+                        
+                    } catch (error) {
+                        sendUpdate(`❌ Error updating ${action.contentType}: ${error.message}`, 'error');
+                    }
+                    
+                    aiProcessed = true;
+                    
+                } else if (action.type === 'world_generation') {
+                    sendUpdate(`🌍 Generating world: ${action.worldParams.name}`, 'system');
+                    await delay(1000);
+                    
+                    sendUpdate('🎲 AI is analyzing your world request...', 'system');
+                    await delay(2000);
+                    
+                    try {
+                        // Import world generator
+                        const worldGenerator = require('./world-generator');
+                        
+                        // Generate world from AI prompt
+                        sendUpdate('🏗️ Creating terrain and biomes...', 'system');
+                        await delay(1500);
+                        
+                        const generatedWorld = await worldGenerator.generateFromPrompt(action.prompt);
+                        
+                        if (generatedWorld) {
+                            sendUpdate('💾 Saving generated world to database...', 'system');
+                            await delay(1000);
+                            
+                            // Save to database
+                            const saveResult = await database.saveWorld(generatedWorld);
+                            
+                            if (saveResult.success) {
+                                const stats = `${Object.keys(generatedWorld.tiles).length} tiles, ${generatedWorld.metadata.biomes.length} biomes, ${generatedWorld.metadata.structures.length} structure types`;
+                                sendUpdate(`📊 World generated: ${stats}`, 'system');
+                                await delay(1000);
+                                
+                                sendUpdate(`✅ World "${generatedWorld.name}" created successfully! You can load it in the world builder.`, 'success');
+                                
+                                // Notify clients about new world
+                                io.emit('worldGenerated', {
+                                    world: {
+                                        id: generatedWorld.id,
+                                        name: generatedWorld.name,
+                                        creator: 'AI World Generator',
+                                        tilesCount: Object.keys(generatedWorld.tiles).length,
+                                        dimensions: `${generatedWorld.width}x${generatedWorld.height}`
+                                    }
+                                });
+                                io.emit('autoRefresh', { reason: `New world generated: ${generatedWorld.name}` });
+                            } else {
+                                sendUpdate('❌ Failed to save generated world to database', 'error');
+                            }
+                        } else {
+                            sendUpdate('❌ Failed to generate world - please try again', 'error');
+                        }
+                    } catch (worldGenError) {
+                        console.error('World generation error:', worldGenError);
+                        sendUpdate(`❌ World generation failed: ${worldGenError.message}`, 'error');
+                    }
+                    
+                    aiProcessed = true;
+                    
+                } else if (action.type === 'ai_gm_event') {
+                    sendUpdate(`🎲 AI Game Master: Triggering ${action.eventType} event...`, 'system');
+                    await delay(1000);
+                    
+                    try {
+                        if (!aiGameMaster) {
+                            sendUpdate('❌ AI Game Master not initialized', 'error');
+                            aiProcessed = true;
+                            return;
+                        }
+                        
+                        sendUpdate('🤖 AI is crafting a dynamic event...', 'system');
+                        await delay(2000);
+                        
+                        const eventResult = await aiGameMaster.triggerManualEvent(action.eventType, {
+                            intensity: action.intensity,
+                            targetPlayer: action.targetPlayer,
+                            customPrompt: action.customPrompt
+                        });
+                        
+                        if (eventResult.success) {
+                            sendUpdate(`✅ Event Created: "${eventResult.event.title}"`, 'success');
+                            sendUpdate(`📜 ${eventResult.event.description}`, 'system');
+                            sendUpdate(`⭐ Rarity: ${eventResult.event.rarity}`, 'system');
+                        } else {
+                            sendUpdate(`❌ Failed to create event: ${eventResult.error}`, 'error');
+                        }
+                    } catch (gmError) {
+                        console.error('AI GM error:', gmError);
+                        sendUpdate(`❌ AI Game Master error: ${gmError.message}`, 'error');
+                    }
+                    
+                    aiProcessed = true;
+                    
+                } else if (action.type === 'ai_gm_state') {
+                    sendUpdate(`🎲 AI Game Master: ${action.queryType} ${action.action}...`, 'system');
+                    await delay(500);
+                    
+                    try {
+                        if (!aiGameMaster) {
+                            sendUpdate('❌ AI Game Master not initialized', 'error');
+                            aiProcessed = true;
+                            return;
+                        }
+                        
+                        if (action.action === 'view') {
+                            const worldState = aiGameMaster.getWorldState();
+                            
+                            switch (action.queryType) {
+                                case 'status':
+                                case 'all':
+                                    sendUpdate(`🌍 World Status:`, 'system');
+                                    sendUpdate(`   Danger Level: ${worldState.danger_level}/10`, 'system');
+                                    sendUpdate(`   Economy: ${worldState.economy_state}`, 'system');
+                                    sendUpdate(`   Weather: ${worldState.weather}`, 'system');
+                                    sendUpdate(`   Season: ${worldState.season}`, 'system');
+                                    sendUpdate(`   Active Players: ${worldState.player_count}`, 'system');
+                                    sendUpdate(`   Active Events: ${worldState.active_events.length}`, 'system');
+                                    break;
+                                    
+                                case 'events':
+                                    if (worldState.active_events.length > 0) {
+                                        sendUpdate(`🎭 Active Events:`, 'system');
+                                        worldState.active_events.forEach(event => {
+                                            sendUpdate(`   • ${event.title} (${event.rarity})`, 'system');
+                                        });
+                                    } else {
+                                        sendUpdate(`🎭 No active events`, 'system');
+                                    }
+                                    
+                                    if (worldState.recent_events.length > 0) {
+                                        sendUpdate(`📚 Recent Events:`, 'system');
+                                        worldState.recent_events.slice(-3).forEach(event => {
+                                            sendUpdate(`   • ${event.title}`, 'system');
+                                        });
+                                    }
+                                    break;
+                                    
+                                case 'players':
+                                    sendUpdate(`👥 Player Activity: ${worldState.player_count} active players`, 'system');
+                                    break;
+                                    
+                                case 'danger':
+                                    sendUpdate(`⚔️ World Danger Level: ${worldState.danger_level}/10`, 'system');
+                                    const dangerDesc = worldState.danger_level <= 3 ? 'Peaceful' : 
+                                                     worldState.danger_level <= 6 ? 'Moderate' : 
+                                                     worldState.danger_level <= 8 ? 'Dangerous' : 'Extreme';
+                                    sendUpdate(`   Status: ${dangerDesc}`, 'system');
+                                    break;
+                            }
+                        } else if (action.action === 'adjust' && action.queryType === 'danger' && action.value) {
+                            const oldLevel = aiGameMaster.worldState.danger_level;
+                            aiGameMaster.adjustDangerLevel(action.value - oldLevel);
+                            sendUpdate(`⚔️ Danger level adjusted from ${oldLevel} to ${aiGameMaster.worldState.danger_level}`, 'success');
+                        }
+                        
+                    } catch (gmError) {
+                        console.error('AI GM state error:', gmError);
+                        sendUpdate(`❌ AI Game Master state error: ${gmError.message}`, 'error');
+                    }
+                    
+                    aiProcessed = true;
+                    
+                } else if (action.type === 'world_analysis') {
+                    sendUpdate(`🔍 Analyzing ${action.target}...`, 'system');
+                    await delay(1500);
+                    
+                    // Get world analysis
+                    const analysis = await analyzeWorld(action.target, action.analysisType);
+                    sendUpdate(`📋 Analysis complete: ${analysis}`, 'success');
+                    aiProcessed = true;
+                    
+                } else if (action.type === 'info_request') {
+                    sendUpdate(`📚 Looking up information about: ${action.topic}`, 'system');
+                    await delay(1000);
+                    
+                    const info = await getGameInfo(action.topic);
+                    sendUpdate(`💡 ${info}`, 'success');
                     aiProcessed = true;
                     
                 } else if (action.type === 'unknown') {
@@ -2240,6 +2761,9 @@ async function createMonsterAutomatically(monsterName, originalCommand) {
             console.log(`✅ Image generated: ${imageUrl}`);
         }
         
+        // Save monster to database
+        await database.saveMonster(monster);
+        
         // Add monster to game files
         await addMonsterToGame(monster);
         
@@ -2370,8 +2894,128 @@ async function addMonsterToGame(monster) {
     }
 }
 
+async function addNPCToGame(npc) {
+    // Add NPC to world.js NPCs array
+    const worldFile = path.join(__dirname, '../client/js/world.js');
+    let worldContent = fs.readFileSync(worldFile, 'utf8');
+    
+    // Find NPCs array and add new NPC
+    const npcPattern = /const npcs = \[([\s\S]*?)\];/;
+    const npcMatch = worldContent.match(npcPattern);
+    
+    if (npcMatch) {
+        const newNpc = `\n    {
+        id: ${Date.now()},
+        name: '${npc.displayName}',
+        x: ${300 + Math.floor(Math.random() * 1400)},
+        y: ${300 + Math.floor(Math.random() * 1400)},
+        hp: ${npc.hp},
+        maxHp: ${npc.maxHp},
+        level: ${npc.level},
+        type: '${npc.isShopkeeper ? 'shopkeeper' : 'friendly'}',
+        dialogue: '${(npc.dialogue || "Hello there!").replace(/'/g, "\\'")}',
+        isShopkeeper: ${npc.isShopkeeper},
+        shopInventory: ${JSON.stringify(npc.shopInventory)},
+        color: '${npc.color || '#4A90E2'}'
+    },`;
+        
+        const updatedNpcs = npcMatch[0].replace(/const npcs = \[/, `const npcs = [${newNpc}`);
+        worldContent = worldContent.replace(npcPattern, updatedNpcs);
+        
+        fs.writeFileSync(worldFile, worldContent);
+        console.log(`✅ Added ${npc.displayName} NPC to world.js`);
+    }
+}
+
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function analyzeWorld(target, analysisType) {
+    try {
+        // Get all worlds from database
+        const worlds = await database.getWorlds();
+        
+        if (worlds.length === 0) {
+            return "No worlds found in database. Create a world using the World Builder first.";
+        }
+        
+        // For now, analyze the most recent world
+        const latestWorld = worlds[0];
+        const worldData = await database.getWorld(latestWorld.id);
+        
+        if (!worldData || !worldData.tiles) {
+            return `World "${latestWorld.name}" has no tiles data.`;
+        }
+        
+        const tiles = worldData.tiles;
+        const tileCount = Object.keys(tiles).length;
+        
+        // Count different tile types
+        const tileTypes = {};
+        let castles = [];
+        
+        for (const [position, tile] of Object.entries(tiles)) {
+            const type = tile.type || 'unknown';
+            tileTypes[type] = (tileTypes[type] || 0) + 1;
+            
+            // Look for castle-related tiles
+            if (type.includes('castle') || type.includes('building') || tile.name?.toLowerCase().includes('castle')) {
+                castles.push({ position, tile });
+            }
+        }
+        
+        if (target.toLowerCase().includes('castle')) {
+            if (castles.length === 0) {
+                return `No castles found in world "${latestWorld.name}". Try building some castle tiles first!`;
+            }
+            
+            if (analysisType === 'detailed') {
+                return `Castle Analysis for "${latestWorld.name}":
+• Found ${castles.length} castle-related structures
+• World size: ${worldData.width}x${worldData.height}
+• Total tiles: ${tileCount}
+• Castle positions: ${castles.map(c => c.position).join(', ')}
+• Tile types in world: ${Object.keys(tileTypes).join(', ')}`;
+            } else {
+                return `Found ${castles.length} castle structures in "${latestWorld.name}"`;
+            }
+        }
+        
+        // General world analysis
+        return `World "${latestWorld.name}" Analysis:
+• Size: ${worldData.width}x${worldData.height}
+• Total tiles: ${tileCount}
+• Tile types: ${Object.keys(tileTypes).join(', ')}
+• Created: ${new Date(latestWorld.createdAt).toLocaleDateString()}`;
+        
+    } catch (error) {
+        console.error('World analysis error:', error);
+        return `Error analyzing world: ${error.message}`;
+    }
+}
+
+async function getGameInfo(topic) {
+    const topicLower = topic.toLowerCase();
+    
+    if (topicLower.includes('world') || topicLower.includes('overview')) {
+        try {
+            const stats = await database.getStats();
+            return `Game Overview: ${stats.worlds} worlds created, ${stats.monsters} custom monsters, ${stats.players} players registered. Use the World Builder to create worlds!`;
+        } catch (error) {
+            return "Game Overview: RuneScape clone with world building, monster creation, and multiplayer features.";
+        }
+    }
+    
+    if (topicLower.includes('monster')) {
+        return "You can create custom monsters using the Claude Terminal! Try: 'create a deadly fire dragon'";
+    }
+    
+    if (topicLower.includes('command') || topicLower.includes('help')) {
+        return "Available commands: Create monsters, update icons, analyze worlds, or ask for information. Try natural language!";
+    }
+    
+    return `Information about "${topic}": This is a RuneScape-style game with world building and monster creation features.`;
 }
 
 // Store message queue for Claude Code
@@ -2415,8 +3059,291 @@ app.post('/claude/processed/:id', (req, res) => {
     res.json({ success: true });
 });
 
-server.listen(PORT, () => {
+// World management endpoints
+
+// Save world data
+app.post('/api/worlds/save', express.json({ limit: '10mb' }), async (req, res) => {
+    try {
+        const worldData = req.body;
+        const result = await database.saveWorld(worldData);
+        res.json(result);
+    } catch (error) {
+        console.error('Error saving world:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Get list of saved worlds
+app.get('/api/worlds', async (req, res) => {
+    try {
+        const worlds = await database.getWorlds();
+        res.json(worlds);
+    } catch (error) {
+        console.error('Error fetching worlds:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Load specific world
+app.get('/api/worlds/:id', async (req, res) => {
+    try {
+        const world = await database.getWorld(req.params.id);
+        if (world) {
+            console.log(`📤 Sending world data for ${req.params.id}:`, {
+                name: world.name,
+                width: world.width,
+                height: world.height,
+                tilesX: world.tilesX,
+                tilesY: world.tilesY,
+                tileSize: world.tileSize,
+                tilesCount: Array.isArray(world.tiles) ? world.tiles.length : Object.keys(world.tiles || {}).length
+            });
+            res.json(world);
+        } else {
+            res.status(404).json({ error: 'World not found' });
+        }
+    } catch (error) {
+        console.error('Error loading world:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Delete world
+app.delete('/api/worlds/:id', async (req, res) => {
+    try {
+        const result = await database.deleteWorld(req.params.id);
+        if (result.deleted) {
+            res.json({ success: true, message: 'World deleted' });
+        } else {
+            res.status(404).json({ error: 'World not found' });
+        }
+    } catch (error) {
+        console.error('Error deleting world:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Monster management endpoints
+
+// Get all monsters
+app.get('/api/monsters', async (req, res) => {
+    try {
+        const monsters = await database.getMonsters();
+        res.json(monsters);
+    } catch (error) {
+        console.error('Error fetching monsters:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Save monster
+app.post('/api/monsters/save', express.json(), async (req, res) => {
+    try {
+        const result = await database.saveMonster(req.body);
+        res.json(result);
+    } catch (error) {
+        console.error('Error saving monster:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// NPC management endpoints
+
+// Get all NPCs
+app.get('/api/npcs', async (req, res) => {
+    try {
+        const npcs = await database.getNPCs();
+        res.json(npcs);
+    } catch (error) {
+        console.error('Error fetching NPCs:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Save NPC
+app.post('/api/npcs/save', express.json(), async (req, res) => {
+    try {
+        const result = await database.saveNPC(req.body);
+        res.json(result);
+    } catch (error) {
+        console.error('Error saving NPC:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Building management endpoints
+
+// Get all buildings
+app.get('/api/buildings', async (req, res) => {
+    try {
+        const buildings = await database.getBuildings();
+        res.json(buildings);
+    } catch (error) {
+        console.error('Error fetching buildings:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Save building
+app.post('/api/buildings/save', express.json(), async (req, res) => {
+    try {
+        const result = await database.saveBuilding(req.body);
+        res.json(result);
+    } catch (error) {
+        console.error('Error saving building:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Object management endpoints
+
+// Get all objects
+app.get('/api/objects', async (req, res) => {
+    try {
+        const objects = await database.getObjects();
+        res.json(objects);
+    } catch (error) {
+        console.error('Error fetching objects:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Save object
+app.post('/api/objects/save', express.json(), async (req, res) => {
+    try {
+        const result = await database.saveObject(req.body);
+        res.json(result);
+    } catch (error) {
+        console.error('Error saving object:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Quest management endpoints
+
+// Get all quests
+app.get('/api/quests', async (req, res) => {
+    try {
+        const quests = await database.getQuests();
+        res.json(quests);
+    } catch (error) {
+        console.error('Error fetching quests:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Save quest
+app.post('/api/quests/save', express.json(), async (req, res) => {
+    try {
+        const result = await database.saveQuest(req.body);
+        res.json(result);
+    } catch (error) {
+        console.error('Error saving quest:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Get database statistics
+app.get('/api/stats', async (req, res) => {
+    try {
+        const stats = await database.getStats();
+        res.json(stats);
+    } catch (error) {
+        console.error('Error fetching stats:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Debug endpoint for environment variables
+app.get('/api/debug/env', (req, res) => {
+    const fs = require('fs');
+    let envFileContent = 'Could not read file';
+    try {
+        const envPath = path.join(__dirname, '../.env');
+        envFileContent = fs.readFileSync(envPath, 'utf8').split('\n')
+            .filter(line => line.includes('OPENAI_API_KEY'))
+            .map(line => line.substring(0, 20) + '...')
+            .join('\n') || 'No OPENAI_API_KEY found in .env';
+    } catch (error) {
+        envFileContent = 'Error reading .env: ' + error.message;
+    }
+    
+    res.json({
+        hasOpenAIKey: !!process.env.OPENAI_API_KEY,
+        keyLength: process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.length : 0,
+        keyStart: process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 20) + '...' : 'Not set',
+        keyEnd: process.env.OPENAI_API_KEY ? '...' + process.env.OPENAI_API_KEY.substring(process.env.OPENAI_API_KEY.length - 10) : 'Not set',
+        nodeEnv: process.env.NODE_ENV || 'not set',
+        envFile: path.join(__dirname, '../.env'),
+        envFileContent: envFileContent,
+        allEnvKeys: Object.keys(process.env).filter(key => key.includes('OPENAI')),
+        processTitle: process.title,
+        cwd: process.cwd()
+    });
+});
+
+// Function to load world data for terrain checking
+async function loadWorldData(worldId = null) {
+    try {
+        let worldData = null;
+        
+        if (worldId) {
+            // Load specific world
+            worldData = await database.getWorld(worldId);
+        } else {
+            // Load the latest world
+            const worlds = await database.getWorlds();
+            if (worlds && worlds.length > 0) {
+                const latestWorld = worlds[0]; // getWorlds returns newest first
+                worldData = await database.getWorld(latestWorld.id);
+            }
+        }
+        
+        if (worldData && worldData.tiles) {
+            currentWorldData = worldData;
+            console.log(`🗺️ Loaded world data for terrain checking: ${worldData.name || 'Unknown'}`);
+            console.log(`📏 World dimensions: ${worldData.width || 2000}x${worldData.height || 2000}`);
+            return true;
+        }
+    } catch (error) {
+        console.warn('⚠️ Could not load world data for terrain checking:', error.message);
+    }
+    
+    // No custom world data, will use default terrain generation
+    currentWorldData = null;
+    console.log('🏞️ Using default terrain generation for monster spawning');
+    return false;
+}
+
+server.listen(PORT, async () => {
     console.log(`RuneScape Clone server running on port ${PORT}`);
     console.log(`Open http://localhost:${PORT} in your browser to play!`);
     console.log(`Claude Code bridge available at http://localhost:${PORT}/claude/messages`);
+    console.log(`📊 Database stats available at http://localhost:${PORT}/api/stats`);
+    
+    // Load world data for terrain checking
+    await loadWorldData();
+    
+    // Initialize AI Game Master after server starts
+    aiGameMaster = new AIGameMaster(io);
+    console.log(`🎲 AI Game Master initialized and monitoring world events`);
+});
+
+// Graceful shutdown
+process.on('SIGINT', () => {
+    console.log('\n🛑 Shutting down server...');
+    database.close();
+    server.close(() => {
+        console.log('✅ Server shutdown complete');
+        process.exit(0);
+    });
+});
+
+process.on('SIGTERM', () => {
+    console.log('\n🛑 Received SIGTERM, shutting down...');
+    database.close();
+    server.close(() => {
+        console.log('✅ Server shutdown complete');
+        process.exit(0);
+    });
 });

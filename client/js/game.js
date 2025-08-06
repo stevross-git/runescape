@@ -12,6 +12,26 @@ class Game {
         this.running = false;
         
         this.setupEventListeners();
+        
+        // Set up callback for when custom world finishes loading
+        this.world.onWorldLoaded = () => {
+            if (this.player) {
+                console.log('🎮 World loaded, updating camera and ensuring player is in bounds...');
+                
+                // Ensure player is within the new world bounds
+                const maxPlayerX = this.world.width - 32; // Leave some margin
+                const maxPlayerY = this.world.height - 32;
+                
+                if (this.player.x > maxPlayerX || this.player.y > maxPlayerY) {
+                    // Move player to center of world if they're outside bounds
+                    this.player.x = Math.min(this.player.x, this.world.width / 2);
+                    this.player.y = Math.min(this.player.y, this.world.height / 2);
+                    console.log(`🔧 Moved player to (${this.player.x}, ${this.player.y}) to fit in world`);
+                }
+                
+                this.world.updateCamera(this.player.x, this.player.y, this.canvas.width, this.canvas.height);
+            }
+        };
     }
 
     init(playerData) {
@@ -146,6 +166,12 @@ class Game {
             const oldY = this.player.y;
             
             this.player.update(deltaTime);
+            
+            // Minimal player movement logging
+            if (Math.abs(this.player.x - oldX) > 50 || Math.abs(this.player.y - oldY) > 50) {
+                console.log(`🎮 Player moved significantly: (${oldX.toFixed(0)}, ${oldY.toFixed(0)}) → (${this.player.x.toFixed(0)}, ${this.player.y.toFixed(0)})`);
+            }
+            
             this.world.updateCamera(this.player.x, this.player.y, this.canvas.width, this.canvas.height);
             
             // Check for PvP area changes when player moves

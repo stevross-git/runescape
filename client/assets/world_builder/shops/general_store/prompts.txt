@@ -1,0 +1,31 @@
+GENERAL STORE TILE PROMPTS - 10 Style Variations
+
+1. American Style (Country):
+"Old West general store, wooden false front, hitching post, frontier town style, 16x16 pixel art, pioneer trading post tile"
+
+2. British Style (Country):
+"English village shop, Tudor architecture, thatched roof, countryside charm, 16x16 pixel art, quaint market town tile"
+
+3. Indian Style (Country):
+"Mumbai spice market stall, colorful awnings, curry spices visible, bustling bazaar style, 16x16 pixel art, street vendor tile"
+
+4. Stardew Valley Style (Game):
+"Pierre's General Store, cozy pixel art, farming game aesthetic, rural community hub, 16x16 pixel art, wholesome shop tile"
+
+5. Fallout Style (Game):
+"Post-apocalyptic trader, rusted signs and barrels, wasteland merchant, retro-futurism style, 16x16 pixel art, survival shop tile"
+
+6. Spirited Away Style (Movie):
+"Ghibli market stall, magical items for sale, spirit world commerce, anime movie magic, 16x16 pixel art, enchanted shop tile"
+
+7. The Grand Budapest Hotel Style (Movie):
+"Wes Anderson shop design, symmetrical layout, pastel colors, whimsical European style, 16x16 pixel art, quirky boutique tile"
+
+8. Casablanca Style (Movie):
+"1940s Moroccan bazaar, wartime black market, classic film noir, 16x16 pixel art, vintage trading post tile"
+
+9. The Walking Dead Style (TV):
+"Apocalypse survivor store, boarded windows, zombie defense, AMC horror style, 16x16 pixel art, survival trading tile"
+
+10. Community Style (TV):
+"Greendale campus store, quirky college shop, sitcom humor, NBC comedy style, 16x16 pixel art, educational retail tile"

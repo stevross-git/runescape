@@ -1,0 +1,31 @@
+STONE TILE PROMPTS - 10 Style Variations
+
+1. Greek Style (Country):
+"Ancient Greek marble stone texture, white with gray veins, classical architecture style, weathered temple floor, 16x16 pixel art, top-down view, game tile"
+
+2. Egyptian Style (Country):
+"Egyptian sandstone texture, hieroglyph carvings faint, pyramid block style, sandy beige color, 16x16 pixel art, ancient civilization game tile"
+
+3. Norwegian Style (Country):
+"Norwegian fjord stone texture, dark granite with icy blue tints, Nordic runes etched, Viking aesthetic, 16x16 pixel art, cold climate rock tile"
+
+4. Dark Souls Style (Game):
+"Dark Souls dungeon stone, grimy medieval texture, blood stains and cracks, gothic horror aesthetic, 16x16 pixel art, challenging game style tile"
+
+5. Pokemon Style (Game):
+"Pokemon cave stone texture, smooth anime-style rock, light gray with highlights, Nintendo aesthetic, 16x16 pixel art, friendly game design tile"
+
+6. Indiana Jones Style (Movie):
+"Temple stone texture, ancient trap mechanisms visible, adventurer movie style, dusty archaeological site, 16x16 pixel art, action film inspired tile"
+
+7. Star Wars Style (Movie):
+"Death Star metal stone texture, imperial gray, sci-fi industrial design, space station floor, 16x16 pixel art, galaxy far away inspired tile"
+
+8. Hobbit Style (Movie):
+"Erebor dwarf stone texture, intricate carved patterns, mountain kingdom aesthetic, Tolkien inspired, 16x16 pixel art, fantasy epic tile"
+
+9. Vikings Style (TV):
+"Norse settlement stone texture, rough hewn rocks, blood and battle worn, History Channel style, 16x16 pixel art, medieval drama tile"
+
+10. The Witcher Style (TV):
+"Kaer Morhen stone texture, monster claw marks, medieval fantasy, Netflix adaptation style, 16x16 pixel art, dark fantasy game tile"

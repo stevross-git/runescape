@@ -1,0 +1,21 @@
+HOUSE SMALL TILE PROMPTS - 10 Style Variations
+
+1. Japanese Style: Small traditional Japanese house, single story wooden structure, dark clay tile roof, sliding shoji door, one small window, simple rectangular shape, muted brown and gray colors, top-down view, 16x16 pixel art tile, video game asset, transparent background, clean pixel borders, minimal details suitable for game tiles
+
+2. German Style: Small Bavarian cottage, steep red tile roof, white stucco walls with dark wooden beams, single wooden door, two small windows with shutters, compact square design, traditional half-timbered style, top-down perspective, 16x16 pixel art, game tile asset, transparent background, clear pixel definition
+
+3. Mexican Style: Small adobe house, flat earthen roof with small parapet, thick tan clay walls, bright blue wooden door, one window with wooden shutters, simple rectangular footprint, desert colors of tan and blue, top-down view, 16x16 pixel art tile, video game building, transparent background, clean geometric shapes
+
+4. Minecraft Style: Small blocky house, cubic grass block roof, wooden plank walls, simple door opening, one window opening, perfectly square structure, bright green and brown colors, minecraft-style pixelated blocks, top-down view, 16x16 pixel art, game building tile, transparent background, crisp block edges
+
+5. Animal Crossing Style: Cute small house, colorful rounded roof in bright colors, cheerful walls, small round door, tiny windows, compact and cozy design, pastel color palette, simplified cartoon style, top-down view, 16x16 pixel art tile, Nintendo-style graphics, transparent background, soft rounded pixels
+
+6. Disney Style: Small fairy tale cottage, curved thatched roof, stone walls with ivy, arched wooden door, diamond-pane windows, whimsical but compact design, warm earth tones, storybook charm, top-down perspective, 16x16 pixel art, animated movie style, transparent background, magical details but simple enough for tiles
+
+7. LOTR Style: Small hobbit-style dwelling, round wooden door, grass-covered curved roof, stone and wood construction, single story, earthy green and brown colors, Shire-inspired design, cozy and rustic, top-down view, 16x16 pixel art tile, fantasy game asset, transparent background, organic curved shapes
+
+8. Ghibli Style: Small countryside house, clay tile roof, wooden walls, traditional Japanese rural style, one door and window, simple chimney, surrounded by small garden details, soft natural colors, Studio Ghibli countryside aesthetic, top-down view, 16x16 pixel art, anime-inspired game tile, transparent background
+
+9. Game of Thrones Style: Small medieval peasant house, thatched straw roof, rough stone walls, wooden door, one small window, very basic construction, dark and weathered appearance, brown and gray colors, medieval village style, top-down perspective, 16x16 pixel art, HBO fantasy game tile, transparent background
+
+10. Adventure Time Style: Small colorful house, bright cartoon colors, simple geometric shape, rounded corners, cheerful door and window, candy-like appearance, vibrant pink and yellow palette, cartoon network style, whimsical but simple, top-down view, 16x16 pixel art tile, animated series graphics, transparent background

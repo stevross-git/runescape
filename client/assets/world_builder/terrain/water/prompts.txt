@@ -1,0 +1,31 @@
+WATER TILE PROMPTS - 10 Style Variations
+
+1. Japanese Style (Country):
+"Japanese koi pond water texture, crystal clear with ripples, cherry blossom petals floating, zen aesthetic, 16x16 pixel art, animated water tile"
+
+2. Caribbean Style (Country):
+"Tropical Caribbean water texture, turquoise blue, white sand visible below, paradise beach style, 16x16 pixel art, crystal clear ocean tile"
+
+3. Venice Style (Country):
+"Venetian canal water texture, murky green-blue, gondola wake patterns, Italian architecture reflection, 16x16 pixel art, city water tile"
+
+4. Subnautica Style (Game):
+"Alien ocean water texture, bioluminescent particles, deep sea mystery, survival game aesthetic, 16x16 pixel art, otherworldly water tile"
+
+5. Animal Crossing Style (Game):
+"Cute cartoon water texture, bright blue with white foam, rounded waves, Nintendo cozy style, 16x16 pixel art, wholesome game water tile"
+
+6. Pirates of the Caribbean Style (Movie):
+"Cursed Caribbean water texture, dark mysterious blue, ghostly fog effects, Disney pirate aesthetic, 16x16 pixel art, supernatural sea tile"
+
+7. Finding Nemo Style (Movie):
+"Pixar ocean water texture, vibrant animated blue, coral reef visible, cheerful underwater style, 16x16 pixel art, family movie water tile"
+
+8. Titanic Style (Movie):
+"North Atlantic water texture, icy dark blue, frozen chunks visible, disaster movie aesthetic, 16x16 pixel art, historically accurate ocean tile"
+
+9. SpongeBob Style (TV):
+"Bikini Bottom water texture, cartoon blue with flowers and rainbows, underwater comedy style, 16x16 pixel art, Nickelodeon ocean tile"
+
+10. Black Sails Style (TV):
+"Pirate era ocean water, dark stormy seas, ship battle debris, Starz drama aesthetic, 16x16 pixel art, golden age piracy tile"

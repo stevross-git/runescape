@@ -43,6 +43,7 @@ class ImageManager {
             
             // Player sprites
             'player_male': 'assets/player/male.png',
+            'player_male_walking': 'assets/player/male_walking.png',
             'player_female': 'assets/player/female.png',
             
             // UI elements (removed - not needed for basic functionality)
@@ -168,8 +169,97 @@ class ImageManager {
         });
     }
 
-    getImage(key) {
-        return this.images.get(key);
+    getImage(key, variant = 1) {
+        // Try to get the exact image with variant
+        const variantKey = variant > 1 ? `${key}_${variant}` : key;
+        let image = this.images.get(variantKey);
+        
+        if (image) {
+            return image;
+        }
+        
+        // Try to get base image without variant
+        image = this.images.get(key);
+        if (image) {
+            return image;
+        }
+        
+        // Try to load from world builder assets dynamically
+        this.loadWorldBuilderImage(key, variant);
+        
+        // Return placeholder for now
+        return this.createPlaceholder(key);
+    }
+    
+    async loadWorldBuilderImage(tileType, variant = 1) {
+        const worldBuilderPaths = {
+            // Terrain
+            'grass': 'assets/world_builder/terrain/grass',
+            'dirt': 'assets/world_builder/terrain/dirt', 
+            'stone': 'assets/world_builder/terrain/stone',
+            'water': 'assets/world_builder/terrain/water',
+            'sand': 'assets/world_builder/terrain/sand',
+            'mud': 'assets/world_builder/terrain/mud',
+            'cobblestone': 'assets/world_builder/terrain/cobblestone',
+            
+            // Buildings
+            'house_small': 'assets/world_builder/buildings/house_small',
+            'house_large': 'assets/world_builder/buildings/house_large',
+            'castle': 'assets/world_builder/buildings/castle',
+            'church': 'assets/world_builder/buildings/church',
+            'inn': 'assets/world_builder/buildings/inn',
+            'hut': 'assets/world_builder/buildings/hut',
+            
+            // Trees
+            'tree_oak': 'assets/world_builder/trees/tree_oak',
+            'tree_normal': 'assets/world_builder/trees/tree_normal',
+            'tree_palm': 'assets/world_builder/trees/tree_palm',
+            'tree_dead': 'assets/world_builder/trees/tree_dead',
+            
+            // Rocks  
+            'rock_iron': 'assets/world_builder/rocks/rock_iron',
+            'rock_coal': 'assets/world_builder/rocks/rock_coal',
+            'rock_gold': 'assets/world_builder/rocks/rock_gold'
+        };
+        
+        const basePath = worldBuilderPaths[tileType];
+        if (basePath) {
+            const imagePath = `${basePath}/${variant}.png`;
+            const variantKey = variant > 1 ? `${tileType}_${variant}` : tileType;
+            
+            // Don't reload if already loading or loaded
+            if (this.loadPromises.has(variantKey)) {
+                return this.loadPromises.get(variantKey);
+            }
+            
+            const promise = this.loadImage(variantKey, imagePath);
+            this.loadPromises.set(variantKey, promise);
+            return promise;
+        }
+    }
+    
+    createPlaceholder(key) {
+        // Create a simple colored canvas as placeholder
+        const canvas = document.createElement('canvas');
+        canvas.width = 32;
+        canvas.height = 32;
+        const ctx = canvas.getContext('2d');
+        
+        // Different colors for different tile types
+        const colors = {
+            'grass': '#228B22',
+            'dirt': '#8B4513', 
+            'stone': '#708090',
+            'water': '#4169E1',
+            'sand': '#F4A460',
+            'tree_oak': '#8B4513',
+            'rock_iron': '#696969'
+        };
+        
+        ctx.fillStyle = colors[key] || '#666666';
+        ctx.fillRect(0, 0, 32, 32);
+        
+        return canvas;
     }
 
     hasImage(key) {
@@ -217,7 +307,7 @@ class ImageManager {
     // Method to preload critical images first
     async loadCriticalImages() {
         const criticalImages = [
-            'grass', 'dirt', 'player_male', 'npc_goblin', 'tree_oak', 'rock_copper'
+            'grass', 'dirt', 'player_male', 'player_male_walking', 'npc_goblin', 'tree_oak', 'rock_copper'
         ];
 
         const promises = criticalImages.map(key => {

@@ -3,6 +3,8 @@ class World {
         this.width = 2000;
         this.height = 2000;
         this.tileSize = 32;
+        this.customWorldData = null;
+        this.worldId = null;
         
         this.camera = {
             x: 0,
@@ -103,7 +105,60 @@ class World {
         console.log(`Generated town with ${this.buildings.length} buildings around spawn (${spawnX}, ${spawnY})`);
     }
 
+    async loadCustomWorld(worldId) {
+        try {
+            const response = await fetch(`/api/worlds/${worldId}`);
+            const worldData = await response.json();
+            
+            if (worldData && worldData.tiles) {
+                this.customWorldData = worldData;
+                this.worldId = worldId;
+                this.width = worldData.width || 2000;
+                this.height = worldData.height || 2000;
+                this.tileSize = worldData.tileSize || 32;
+                
+                console.log(`✅ Loaded custom world: ${worldData.name}`);
+                console.log(`🌍 World dimensions: ${this.width}x${this.height} pixels (${worldData.tilesX || '?'}x${worldData.tilesY || '?'} tiles)`);
+                console.log(`📦 World data structure:`, Object.keys(worldData));
+                return true;
+            }
+        } catch (error) {
+            console.error('Failed to load custom world:', error);
+        }
+        return false;
+    }
+    
     generateWorld() {
+        // Check if we should load a custom world
+        const urlParams = new URLSearchParams(window.location.search);
+        const worldId = urlParams.get('worldId');
+        
+        if (worldId) {
+            console.log(`🌍 Loading custom world: ${worldId}`);
+            this.loadCustomWorld(worldId).then(loaded => {
+                if (loaded) {
+                    console.log(`✅ Custom world loaded. Dimensions: ${this.width}x${this.height} (${this.width/this.tileSize}x${this.height/this.tileSize} tiles)`);
+                    // Notify any listeners that the world has loaded
+                    if (this.onWorldLoaded) {
+                        console.log(`🔔 Calling onWorldLoaded callback...`);
+                        this.onWorldLoaded();
+                    } else {
+                        console.warn(`⚠️ No onWorldLoaded callback registered!`);
+                    }
+                } else {
+                    console.warn(`❌ Failed to load custom world, using default`);
+                    // Fallback to default generation
+                    this.generateDefaultWorld();
+                }
+            });
+        } else {
+            console.log(`🏞️ No worldId parameter found, generating default world`);
+            this.generateDefaultWorld();
+        }
+    }
+    
+    generateDefaultWorld() {
+        console.log(`🏗️ Generating default world with dimensions: ${this.width}x${this.height}`);
         // First, generate the town buildings around spawn area (1000, 1000)
         this.generateTown();
         
@@ -222,11 +277,26 @@ class World {
     }
 
     updateCamera(playerX, playerY, canvasWidth, canvasHeight) {
-        this.camera.x = playerX - canvasWidth / 2;
-        this.camera.y = playerY - canvasHeight / 2;
+        // Calculate desired camera position (center on player)
+        const desiredCameraX = playerX - canvasWidth / 2;
+        const desiredCameraY = playerY - canvasHeight / 2;
         
-        this.camera.x = Math.max(0, Math.min(this.width - canvasWidth, this.camera.x));
-        this.camera.y = Math.max(0, Math.min(this.height - canvasHeight, this.camera.y));
+        // Calculate maximum camera positions
+        const maxCameraX = Math.max(0, this.width - canvasWidth);
+        const maxCameraY = Math.max(0, this.height - canvasHeight);
+        
+        // Store old camera position for debugging
+        const oldCameraX = this.camera.x;
+        const oldCameraY = this.camera.y;
+        
+        // Apply constraints
+        this.camera.x = Math.max(0, Math.min(maxCameraX, desiredCameraX));
+        this.camera.y = Math.max(0, Math.min(maxCameraY, desiredCameraY));
+        
+        // Minimal camera debug logging (only when camera actually moves)
+        if (Math.abs(this.camera.x - oldCameraX) > 1 || Math.abs(this.camera.y - oldCameraY) > 1) {
+            console.log(`📹 Camera moved to (${this.camera.x.toFixed(0)}, ${this.camera.y.toFixed(0)}) following player at (${playerX.toFixed(0)}, ${playerY.toFixed(0)})`);
+        }
     }
 
     render(ctx) {
@@ -250,13 +320,45 @@ class World {
                 const screenX = x - this.camera.x;
                 const screenY = y - this.camera.y;
                 
-                // More complex terrain generation for RuneScape-style world
                 let terrainType;
                 const tileX = Math.floor(x / this.tileSize);
                 const tileY = Math.floor(y / this.tileSize);
                 
-                // Use noise-like function for more natural terrain
-                const noise = Math.sin(tileX * 0.1) * Math.cos(tileY * 0.1) + Math.sin(tileX * 0.05) * 0.5;
+                // Check if we have custom world data
+                let tileVariant = 1;
+                if (this.customWorldData && this.customWorldData.tiles) {
+                    let customTile = null;
+                    
+                    // Handle both 2D array format (from world builder) and object format
+                    if (Array.isArray(this.customWorldData.tiles)) {
+                        // 2D array format: tiles[y][x]
+                        if (tileY >= 0 && tileY < this.customWorldData.tiles.length && 
+                            tileX >= 0 && tileX < this.customWorldData.tiles[tileY].length) {
+                            customTile = this.customWorldData.tiles[tileY][tileX];
+                        }
+                    } else {
+                        // Object format: tiles["x,y"] (legacy)
+                        const tileKey = `${tileX},${tileY}`;
+                        customTile = this.customWorldData.tiles[tileKey];
+                    }
+                    
+                    if (customTile && customTile.type) {
+                        terrainType = customTile.type;
+                        tileVariant = customTile.variant || 1;
+                        
+                        // Handle special tiles (monsters, resources, etc)
+                        if (customTile.content || customTile.monsters || customTile.npcs) {
+                            // These will be rendered separately
+                        }
+                    } else {
+                        terrainType = 'grass'; // Default for empty tiles
+                        tileVariant = 1;
+                    }
+                } else {
+                    // Use default terrain generation
+                    
+                    // Use noise-like function for more natural terrain
+                    const noise = Math.sin(tileX * 0.1) * Math.cos(tileY * 0.1) + Math.sin(tileX * 0.05) * 0.5;
                 
                 // Water areas (rivers, lakes)
                 if (y < 150 || (y > 800 && y < 900 && x > 600 && x < 900)) {
@@ -311,10 +413,28 @@ class World {
                         terrainType = 'grass';
                     }
                 }
+                }
                 
                 // Draw terrain image or fallback to color
-                if (imageManager.isLoaded() && imageManager.hasImage(terrainType)) {
-                    imageManager.drawImage(ctx, terrainType, screenX, screenY, this.tileSize, this.tileSize);
+                if (imageManager.isLoaded()) {
+                    // Try to get image with variant, will handle loading dynamically
+                    const image = imageManager.getImage(terrainType, tileVariant);
+                    if (image && image.width) {
+                        ctx.drawImage(image, screenX, screenY, this.tileSize, this.tileSize);
+                    } else {
+                        // Image is loading or failed, use fallback color
+                        const fallbackColors = {
+                            grass: '#228B22',
+                            dirt: '#8B4513',
+                            stone: '#696969',
+                            water: '#4169E1',
+                            sand: '#F4A460',
+                            mud: '#654321',
+                            cobblestone: '#778899'
+                        };
+                        ctx.fillStyle = fallbackColors[terrainType] || '#228B22';
+                        ctx.fillRect(screenX, screenY, this.tileSize, this.tileSize);
+                    }
                 } else {
                     // Fallback colors
                     const fallbackColors = {

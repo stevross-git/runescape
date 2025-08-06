@@ -18,7 +18,13 @@
       "Bash(ls:*)",
       "Bash(true)",
       "Bash(./restart_server.bat)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(curl:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(sqlite3:*)",
+      "Bash(wmic process where:*)",
+      "Bash(timeout:*)"
     ],
     "deny": []
   }

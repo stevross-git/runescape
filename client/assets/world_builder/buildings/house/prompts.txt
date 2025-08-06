@@ -1,0 +1,31 @@
+HOUSE TILE PROMPTS - 10 Style Variations
+
+1. Japanese Style (Country):
+"Traditional Japanese house, curved tile roof, wooden walls, paper windows, tatami aesthetic, 16x16 pixel art, top-down view, zen architecture tile"
+
+2. German Style (Country):
+"Bavarian half-timbered house, white walls with dark wood beams, red clay roof, Alpine style, 16x16 pixel art, fairy tale cottage tile"
+
+3. Mexican Style (Country):
+"Adobe hacienda house, terracotta walls, red tile roof, southwestern style, 16x16 pixel art, desert architecture tile"
+
+4. Minecraft Style (Game):
+"Blocky cubic house, cobblestone and wood planks, simple geometric design, sandbox game aesthetic, 16x16 pixel art, crafted home tile"
+
+5. Stardew Valley Style (Game):
+"Cozy farmhouse pixel art, warm colors, chimney smoke, indie farming game style, 16x16 pixel art, rural home tile"
+
+6. Studio Ghibli Style (Movie):
+"Totoro-style cottage, whimsical curved roof, overgrown with vines, anime movie magic, 16x16 pixel art, enchanted home tile"
+
+7. Harry Potter Style (Movie):
+"Hogwarts house building, magical architecture, floating elements, wizarding world style, 16x16 pixel art, magical dwelling tile"
+
+8. Up Style (Movie):
+"Pixar balloon house, colorful Victorian style, balloons attached, heartwarming aesthetic, 16x16 pixel art, flying home tile"
+
+9. Game of Thrones Style (TV):
+"Winterfell manor house, gray stone walls, stark banner, medieval fantasy, 16x16 pixel art, HBO epic house tile"
+
+10. The Simpsons Style (TV):
+"742 Evergreen Terrace, yellow cartoon house, American suburban, animated comedy style, 16x16 pixel art, sitcom home tile"

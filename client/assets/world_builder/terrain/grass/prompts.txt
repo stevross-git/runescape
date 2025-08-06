@@ -1,0 +1,31 @@
+GRASS TILE PROMPTS - 10 Style Variations
+
+1. Japanese Style (Country):
+"Japanese zen garden grass texture, mossy green, subtle bamboo leaf patterns, traditional Japanese art style, 16x16 pixel art, top-down view, seamless tile, soft natural colors, video game asset"
+
+2. Mexican Style (Country):
+"Mexican desert grass texture, dry yellow-green grass, agave plant hints, vibrant aztec-inspired patterns, 16x16 pixel art, top-down view, warm earthy colors, video game tile asset"
+
+3. Scottish Style (Country):
+"Scottish highland grass texture, lush emerald green, heather flowers scattered, misty moorland style, 16x16 pixel art, top-down view, deep rich greens, Celtic patterns, game tile"
+
+4. Minecraft Style (Game):
+"Minecraft-inspired grass block texture, bright pixelated green top, dirt sides visible, blocky 16x16 pixel art, iconic cube grass style, video game tile asset"
+
+5. Zelda Style (Game):
+"Legend of Zelda grass texture, bright cheerful green, small flowers and details, Wind Waker art style, 16x16 pixel art, stylized cartoon grass, Nintendo game tile"
+
+6. Lord of the Rings Style (Movie):
+"Middle-earth grass texture, Shire-inspired lush green, small wildflowers, fantasy movie aesthetic, 16x16 pixel art, pastoral perfection, film-quality game tile"
+
+7. Avatar Style (Movie):
+"Pandora bioluminescent grass texture, exotic blue-green hues, glowing tips, alien plant life, 16x16 pixel art, James Cameron's Avatar inspired, sci-fi game tile"
+
+8. Studio Ghibli Style (Movie):
+"Ghibli-style grass texture, vibrant hand-painted look, whimsical details, Totoro forest floor, 16x16 pixel art, anime movie quality, magical realism tile"
+
+9. Game of Thrones Style (TV):
+"Westeros grass texture, dark medieval style, battle-worn earth showing through, gritty realistic, 16x16 pixel art, HBO fantasy series inspired, game tile"
+
+10. Adventure Time Style (TV):
+"Adventure Time grass texture, bright cartoon style, rounded edges, candy kingdom aesthetic, 16x16 pixel art, Cartoon Network inspired, whimsical game tile"

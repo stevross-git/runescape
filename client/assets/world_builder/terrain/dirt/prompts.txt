@@ -1,0 +1,31 @@
+DIRT TILE PROMPTS - 10 Style Variations
+
+1. Japanese Style (Country):
+"Japanese garden path dirt, raked patterns, zen rock garden texture, earthy brown, traditional Japanese aesthetic, 16x16 pixel art, top-down view, game tile"
+
+2. Australian Style (Country):
+"Australian outback red dirt texture, iron-rich ochre color, dry cracked earth, aboriginal dot painting influences, 16x16 pixel art, desert soil, game tile"
+
+3. Brazilian Style (Country):
+"Amazon rainforest dirt texture, dark rich soil, decomposed leaves visible, tropical earth, 16x16 pixel art, jungle floor style, moist earth game tile"
+
+4. Terraria Style (Game):
+"Terraria-style dirt block, brown pixelated texture, small pebbles and roots, 2D sandbox game aesthetic, 16x16 pixel art, side-scrolling game tile"
+
+5. Stardew Valley Style (Game):
+"Stardew Valley farmland dirt, tilled soil texture, ready for planting, cozy farming game style, 16x16 pixel art, pastoral game aesthetic tile"
+
+6. Mad Max Style (Movie):
+"Post-apocalyptic wasteland dirt, dusty barren texture, tire tracks visible, Fury Road inspired, 16x16 pixel art, desolate earth game tile"
+
+7. Dune Style (Movie):
+"Arrakis desert dirt texture, spice-orange tinted sand, windswept patterns, sci-fi epic style, 16x16 pixel art, alien planet surface tile"
+
+8. Harry Potter Style (Movie):
+"Hogwarts grounds dirt texture, magical earth with sparkles, enchanted forest floor, 16x16 pixel art, wizarding world inspired game tile"
+
+9. Breaking Bad Style (TV):
+"New Mexico desert dirt, yellow-brown earth, meth lab blue crystal specs, gritty realistic, 16x16 pixel art, AMC drama inspired tile"
+
+10. Stranger Things Style (TV):
+"Upside Down dirt texture, dark corrupted earth, otherworldly particles, 80s horror aesthetic, 16x16 pixel art, Netflix series inspired tile"

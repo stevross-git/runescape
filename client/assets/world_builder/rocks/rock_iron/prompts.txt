@@ -1,0 +1,31 @@
+ROCK IRON TILE PROMPTS - 10 Style Variations
+
+1. Scottish Style (Country):
+"Highland iron ore deposit, clan mining tradition, heather growing around, Celtic extraction, 16x16 pixel art, mountain mining tile"
+
+2. Australian Style (Country):
+"Outback iron ore mine, red earth contrast, aboriginal rock art nearby, mining heritage, 16x16 pixel art, desert extraction tile"
+
+3. Russian Style (Country):
+"Siberian iron deposit, frozen tundra mining, Soviet industrial legacy, harsh climate extraction, 16x16 pixel art, arctic mining tile"
+
+4. Minecraft Style (Game):
+"Blocky iron ore block, gray speckled texture, cubic mining design, sandbox resource, 16x16 pixel art, survival gathering tile"
+
+5. Terraria Style (Game):
+"2D iron ore vein, side-scrolling mining, pickaxe marks visible, indie adventure style, 16x16 pixel art, platformer resource tile"
+
+6. Iron Man Style (Movie):
+"Arc reactor iron source, Tony Stark's cave mining, superhero origin story, Marvel industrial, 16x16 pixel art, heroic metal tile"
+
+7. Snow White Style (Movie):
+"Seven dwarfs mine shaft, diamond and iron mixed, Disney fairy tale mining, 16x16 pixel art, magical dwarf work tile"
+
+8. Avatar Style (Movie):
+"Unobtainium mining on Pandora, alien world extraction, James Cameron sci-fi, 16x16 pixel art, otherworld resource tile"
+
+9. Deadwood Style (TV):
+"Wild West iron claims, frontier mining operation, HBO western drama, 16x16 pixel art, gold rush era metal tile"
+
+10. Breaking Bad Style (TV):
+"Methylamine barrel disposal site, metal contamination, AMC crime drama, 16x16 pixel art, criminal evidence tile"

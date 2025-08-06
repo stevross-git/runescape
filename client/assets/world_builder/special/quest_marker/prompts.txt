@@ -1,0 +1,12 @@
+QUEST MARKER TILE PROMPTS - 10 Style Variations
+
+1. Japanese Style: Traditional quest marker with zen aesthetics, 16x16 pixel art
+2. German Style: Bavarian quest marker with European charm, 16x16 pixel art
+3. Mexican Style: Southwest quest marker with desert themes, 16x16 pixel art
+4. Minecraft Style: Blocky quest marker with cubic design, 16x16 pixel art
+5. Animal Crossing Style: Cute quest marker with cartoon design, 16x16 pixel art
+6. Disney Style: Magical quest marker with fairy tale elements, 16x16 pixel art
+7. LOTR Style: Epic fantasy quest marker with Tolkien aesthetics, 16x16 pixel art
+8. Ghibli Style: Whimsical quest marker with anime movie magic, 16x16 pixel art
+9. Game of Thrones Style: Medieval quest marker with HBO drama style, 16x16 pixel art
+10. Adventure Time Style: Cartoon quest marker with colorful whimsy, 16x16 pixel art

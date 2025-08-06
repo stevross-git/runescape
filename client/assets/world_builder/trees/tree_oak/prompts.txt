@@ -1,0 +1,31 @@
+TREE OAK TILE PROMPTS - 10 Style Variations
+
+1. English Style (Country):
+"Ancient English oak tree, thick gnarled trunk, acorns falling, Sherwood Forest style, 16x16 pixel art, Robin Hood tree tile"
+
+2. American Style (Country):
+"Southern live oak, Spanish moss hanging, plantation grounds style, Georgia landscape, 16x16 pixel art, antebellum tree tile"
+
+3. Celtic Style (Country):
+"Sacred Celtic oak, druid symbols carved, mystical Irish grove, ancient wisdom tree, 16x16 pixel art, pagan ritual tree tile"
+
+4. Minecraft Style (Game):
+"Blocky oak tree, cubic leaves and trunk, simple geometric design, sandbox game aesthetic, 16x16 pixel art, crafted tree tile"
+
+5. Animal Crossing Style (Game):
+"Cute cartoon oak tree, rounded friendly design, fruit hanging, Nintendo cozy style, 16x16 pixel art, wholesome nature tile"
+
+6. Avatar Style (Movie):
+"Tree of Souls inspired, bioluminescent blue glow, spiritual connections, Pandora ecosystem, 16x16 pixel art, alien sacred tree tile"
+
+7. Lord of the Rings Style (Movie):
+"Fangorn Forest oak, ancient ent-like features, Middle-earth majesty, Tolkien epic scale, 16x16 pixel art, fantasy ancient tree tile"
+
+8. Pan's Labyrinth Style (Movie):
+"Dark fairy tale oak, twisted branches, gothic fantasy elements, del Toro aesthetic, 16x16 pixel art, magical realism tree tile"
+
+9. Lost Style (TV):
+"Mysterious island oak, smoke monster nearby, tropical island mystery, ABC drama style, 16x16 pixel art, enigmatic jungle tree tile"
+
+10. Twin Peaks Style (TV):
+"Pacific Northwest oak, fog shrouded, Lynch surrealism, eerie small town atmosphere, 16x16 pixel art, mysterious forest tile"

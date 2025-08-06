@@ -1,0 +1,31 @@
+BANK TILE PROMPTS - 10 Style Variations
+
+1. Swiss Style (Country):
+"Swiss bank building, precision architecture, gold vault entrance, Alpine banking style, 16x16 pixel art, financial institution tile"
+
+2. British Style (Country):
+"Victorian London bank, red brick facade, brass fixtures, colonial banking style, 16x16 pixel art, old world finance tile"
+
+3. American Style (Country):
+"Wild West bank building, wooden frontier style, sheriff protection, cowboy era aesthetic, 16x16 pixel art, frontier bank tile"
+
+4. Animal Crossing Style (Game):
+"Tom Nook's bank, cute cartoon design, bell currency symbols, Nintendo cozy style, 16x16 pixel art, wholesome banking tile"
+
+5. Grand Theft Auto Style (Game):
+"Modern bank building, security cameras visible, heist target aesthetic, crime game style, 16x16 pixel art, urban bank tile"
+
+6. Ocean's Eleven Style (Movie):
+"Las Vegas casino bank, neon signs, heist movie glamour, sophisticated crime style, 16x16 pixel art, stylish vault tile"
+
+7. Mary Poppins Style (Movie):
+"Edwardian London bank, whimsical Disney style, chimney sweep dust, musical magic, 16x16 pixel art, family film bank tile"
+
+8. It's a Wonderful Life Style (Movie):
+"Bailey Building & Loan, small town charm, Christmas movie warmth, 16x16 pixel art, heartwarming community bank tile"
+
+9. Better Call Saul Style (TV):
+"Albuquerque bank branch, money laundering hints, AMC drama style, 16x16 pixel art, crime drama banking tile"
+
+10. Parks and Recreation Style (TV):
+"Pawnee First National, small town government, sitcom bureaucracy, 16x16 pixel art, comedy municipal bank tile"
